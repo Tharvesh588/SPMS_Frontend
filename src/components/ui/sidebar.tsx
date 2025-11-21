@@ -556,17 +556,16 @@ const SidebarMenuButton = React.forwardRef<
 
     if (href) {
         const linkButton = (
-             <Link href={href} passHref legacyBehavior>
-                <a
-                    ref={ref as React.Ref<HTMLAnchorElement>}
-                    data-sidebar="menu-button"
-                    data-size={size}
-                    data-active={isActive}
-                    className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-                    {...props}
-                >
-                    {buttonContent}
-                </a>
+             <Link 
+                href={href} 
+                ref={ref as React.Ref<HTMLAnchorElement>}
+                data-sidebar="menu-button"
+                data-size={size}
+                data-active={isActive}
+                className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+                {...props}
+              >
+                {buttonContent}
             </Link>
         )
 
