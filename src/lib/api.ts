@@ -86,20 +86,13 @@ export async function createBatch(batchData: CreateBatchData): Promise<{success:
     });
 }
 
-// Batches - Returns mock data to prevent errors
 export async function getBatches(): Promise<Batch[]> {
-  // const response = await fetcher<{
-  //   success: boolean;
-  //   count: number;
-  //   batches: Batch[];
-  // }>("/admin/batches");
-  // return response.batches;
-  console.warn("Using mock data for getBatches as the admin endpoint is not available.");
-  return Promise.resolve([
-    { _id: 'batch-1', batchName: 'Computer Science 2024', username: 'cs2024', project: 'AI-Powered E-commerce', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { _id: 'batch-2', batchName: 'Information Tech 2024', username: 'it2024', project: 'Blockchain Voting', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-    { _id: 'batch-3', batchName: 'Electronics 2024', username: 'ece2024', project: 'IoT Smart Home', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() },
-  ]);
+  const response = await fetcher<{
+    success: boolean;
+    count: number;
+    batches: Batch[];
+  }>("/admin/batches");
+  return response.batches;
 }
 
 // Problem Statements - Returns mock data to prevent errors
