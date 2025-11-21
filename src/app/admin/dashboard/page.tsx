@@ -4,14 +4,13 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRight, Loader2, FileText } from 'lucide-react';
+import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, CheckSquare, Loader2, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
-import Link from 'next/link';
 import React, { useEffect, useState } from 'react';
-import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
+import { getFaculties, getBatches } from '@/lib/api';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -46,7 +45,7 @@ export default function AdminDashboard() {
   const [stats, setStats] = useState({
     faculties: 0,
     batches: 0,
-    problemStatements: 0,
+    projectsSelected: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -58,10 +57,13 @@ export default function AdminDashboard() {
           getFaculties(),
           getBatches(),
         ]);
+        
+        const projectsSelected = batches.filter(batch => batch.project).length;
+
         setStats({
           faculties: faculties.length,
           batches: batches.length,
-          problemStatements: 0, // Endpoint not available for admin
+          projectsSelected: projectsSelected,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
@@ -78,16 +80,7 @@ export default function AdminDashboard() {
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
               <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Problem Statements</CardTitle>
-                  <FileText className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">N/A</div>
-                  <p className="text-xs text-muted-foreground">Endpoint not available for admin</p>
-                </CardContent>
-              </Card>
+              <StatCard title="Projects Selected" value={stats.projectsSelected} icon={<CheckSquare className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
             </div>
 
             <Card>
@@ -165,7 +158,9 @@ function StatCard({ title, value, icon, isLoading }: { title: string, value: num
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <div className="h-8 flex items-center">
+            <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+          </div>
         ) : (
           <div className="text-2xl font-bold">{value}</div>
         )}
