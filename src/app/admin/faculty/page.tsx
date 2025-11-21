@@ -15,7 +15,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { getFaculties } from '@/lib/api';
 import type { Faculty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
@@ -55,28 +55,34 @@ const AdminSidebar = () => (
 export default function ManageFacultyPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const fetchFaculties = async () => {
-      try {
-        setIsLoading(true);
-        const data = await getFaculties();
-        setFaculties(data);
-      } catch (error) {
-        console.error('Failed to fetch faculties:', error);
-        toast({
-          variant: "destructive",
-          title: "Failed to load faculties",
-          description: "There was an error fetching the faculty data. Please try again later.",
-        })
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchFaculties();
+  const fetchFaculties = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await getFaculties();
+      setFaculties(data);
+    } catch (error) {
+      console.error('Failed to fetch faculties:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load faculties",
+        description: (error as Error).message || "There was an error fetching the faculty data. Please try again later.",
+      })
+    } finally {
+      setIsLoading(false);
+    }
   }, [toast]);
+
+  useEffect(() => {
+    fetchFaculties();
+  }, [fetchFaculties]);
+
+  const handleFacultyCreated = () => {
+    fetchFaculties();
+    setIsFormOpen(false);
+  }
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
@@ -86,7 +92,7 @@ export default function ManageFacultyPage() {
                     <CardTitle>Manage Faculty</CardTitle>
                     <CardDescription>View, edit, and manage faculty accounts.</CardDescription>
                 </div>
-                <Dialog>
+                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
                   <DialogTrigger asChild>
                     <Button>
                         <UserPlus className="mr-2 h-4 w-4" />
@@ -97,7 +103,7 @@ export default function ManageFacultyPage() {
                     <DialogHeader>
                         <DialogTitle>Create Faculty Account</DialogTitle>
                     </DialogHeader>
-                    <CreateFacultyForm />
+                    <CreateFacultyForm onFacultyCreated={handleFacultyCreated} />
                   </DialogContent>
                 </Dialog>
             </CardHeader>

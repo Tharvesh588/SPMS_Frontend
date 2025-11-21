@@ -26,7 +26,11 @@ const formSchema = z.object({
   quota: z.coerce.number().min(1, 'Quota must be at least 1'),
 });
 
-export function CreateFacultyForm() {
+type CreateFacultyFormProps = {
+  onFacultyCreated?: () => void;
+};
+
+export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -54,7 +58,7 @@ export function CreateFacultyForm() {
         description: `Account for ${values.name} has been successfully created.`,
       });
       form.reset();
-      // Optionally, you can add a callback to refresh the faculty list
+      onFacultyCreated?.();
     } catch (error) {
         const err = error as Error;
         console.error('Failed to create faculty:', error);

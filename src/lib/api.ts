@@ -38,7 +38,7 @@ type LoginCredentials = {
 };
 
 export async function login(credentials: LoginCredentials): Promise<{ token: string }> {
-    const response = await fetcher<{ token: string }>("/auth/login", {
+    const response = await fetcher<{ token: string, user: any }>("/auth/login", {
         method: 'POST',
         body: JSON.stringify(credentials),
     });
