@@ -33,7 +33,7 @@ type DashboardLayoutProps = {
 export function DashboardLayout({ children, sidebarContent, userRole }: DashboardLayoutProps) {
   return (
     <SidebarProvider>
-      <div className="min-h-screen w-full">
+      <div className="min-h-screen w-full flex">
         <Sidebar>
           <SidebarHeader>
             <Logo />
@@ -52,8 +52,8 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
             </SidebarMenu>
           </SidebarFooter>
         </Sidebar>
-        <SidebarInset>
-          <header className="flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6 sticky top-0 z-40">
+        <div className="flex flex-col w-full">
+          <header className="flex h-14 items-center gap-4 border-b bg-background px-4 md:px-6 sticky top-0 z-30">
             <SidebarTrigger className="md:hidden" />
             <div className="flex-1">
               <h1 className="text-lg font-semibold md:text-2xl font-headline">{userRole} Dashboard</h1>
@@ -87,7 +87,7 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
             </DropdownMenu>
           </header>
           <main className="flex-1 p-4 md:p-6">{children}</main>
-        </SidebarInset>
+        </div>
       </div>
     </SidebarProvider>
   );

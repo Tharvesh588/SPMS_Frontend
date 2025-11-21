@@ -9,21 +9,18 @@ import { problemStatements, type ProblemStatement } from '@/lib/data';
 const BatchSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton isActive>
+      <SidebarMenuButton isActive title="Dashboard">
         <LayoutDashboard />
-        Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="All Statements">
         <Files />
-        All Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="My Selection">
         <FileCheck />
-        My Selection
       </SidebarMenuButton>
     </SidebarMenuItem>
   </SidebarMenu>

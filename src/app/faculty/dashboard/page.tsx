@@ -8,21 +8,18 @@ import { problemStatements } from '@/lib/data';
 const FacultySidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton isActive>
+      <SidebarMenuButton isActive title="Dashboard">
         <LayoutDashboard />
-        Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="Upload Statement">
         <FilePlus2 />
-        Upload Statement
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="My Statements">
         <FileText />
-        My Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
   </SidebarMenu>

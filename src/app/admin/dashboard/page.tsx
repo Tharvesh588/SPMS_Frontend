@@ -7,27 +7,23 @@ import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRig
 const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton isActive>
+      <SidebarMenuButton isActive title="Dashboard">
         <LayoutDashboard />
-        Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="Manage Faculty">
         <Users />
-        Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="Manage Batches">
         <BookCopy />
-        Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton>
+      <SidebarMenuButton title="Problem Statements">
         <FilePlus2 />
-        Problem Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
   </SidebarMenu>
