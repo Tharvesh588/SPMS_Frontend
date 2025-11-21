@@ -1,6 +1,7 @@
+'use client';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -8,6 +9,7 @@ import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import Link from 'next/link';
+import React from 'react';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -42,7 +44,7 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex flex-col gap-6">
-            <Card className="col-span-1 lg:col-span-3">
+            <Card className="w-full">
                 <CardHeader>
                     <CardTitle>Welcome, Admin</CardTitle>
                     <CardDescription>Manage the entire project allocation system from here.</CardDescription>
@@ -104,24 +106,13 @@ export default function AdminDashboard() {
 }
 
 function DashboardActionCard({ title, description, icon, actionText, asTrigger = false }: { title: string, description: string, icon: React.ReactNode, actionText: string, asTrigger?: boolean }) {
-    const ButtonComponent = asTrigger ? DialogTrigger : 'button';
-    const isLink = !asTrigger;
 
-    const content = (
-        <Button asChild={isLink} className="w-full group">
-            {isLink ? (
-                <Link href="#">
-                    {actionText}
-                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </Link>
-            ) : (
-                <DialogTrigger className="w-full group-hover:bg-primary/90 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground h-10 px-4 py-2">
-                    {actionText}
-                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                </DialogTrigger>
-            )}
+    const ActionButton = () => (
+         <Button className="w-full group">
+            {actionText}
+            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
         </Button>
-    );
+    )
 
     return (
         <Card className="flex flex-col">
@@ -133,12 +124,15 @@ function DashboardActionCard({ title, description, icon, actionText, asTrigger =
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-                 <Button asChild={!asTrigger} className="w-full group">
-                    <ButtonComponent>
-                        {actionText}
-                        <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-                    </ButtonComponent>
-                </Button>
+                {asTrigger ? (
+                    <DialogTrigger asChild>
+                       <ActionButton />
+                    </DialogTrigger>
+                ) : (
+                    <Link href="#">
+                        <ActionButton />
+                    </Link>
+                )}
             </CardContent>
         </Card>
     )
