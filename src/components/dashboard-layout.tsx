@@ -1,3 +1,4 @@
+
 'use client';
 import {
   SidebarProvider,
@@ -19,6 +20,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 
 type DashboardLayoutProps = {
   children: React.ReactNode;
@@ -27,6 +29,15 @@ type DashboardLayoutProps = {
 };
 
 export function DashboardLayout({ children, sidebarContent, userRole }: DashboardLayoutProps) {
+  const router = useRouter();
+
+  const handleLogout = () => {
+    if(typeof window !== 'undefined') {
+      localStorage.removeItem('token');
+    }
+    router.push('/');
+  }
+
   return (
     <SidebarProvider>
       <div className="min-h-screen w-full flex">
@@ -64,11 +75,9 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
                   <span>Settings</span>
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem asChild>
-                  <Link href="/">
+                <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />
                     Logout
-                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
