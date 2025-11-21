@@ -1,3 +1,4 @@
+
 'use client';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
@@ -53,12 +54,14 @@ export default function AdminDashboard() {
     async function fetchData() {
       try {
         setIsLoading(true);
-        // Fetch only faculties as other endpoints are not available for admin
-        const faculties = await getFaculties();
+        const [faculties, batches] = await Promise.all([
+          getFaculties(),
+          getBatches(),
+        ]);
         setStats({
           faculties: faculties.length,
-          batches: 0, // Mocked to 0
-          problemStatements: 0, // Mocked to 0
+          batches: batches.length,
+          problemStatements: 0, // Endpoint not available for admin
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
@@ -74,16 +77,7 @@ export default function AdminDashboard() {
         <div className="flex flex-col gap-6">
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
               <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <Card>
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Total Batches</CardTitle>
-                  <BookCopy className="h-6 w-6 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">N/A</div>
-                   <p className="text-xs text-muted-foreground">Endpoint not available for admin</p>
-                </CardContent>
-              </Card>
+              <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
               <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                   <CardTitle className="text-sm font-medium">Total Problem Statements</CardTitle>
