@@ -33,7 +33,7 @@ const AdminSidebar = () => (
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="#">
+      <SidebarMenuButton href="/admin/problem-statements">
         <FilePlus2 />
         Problem Statements
       </SidebarMenuButton>
