@@ -15,6 +15,13 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Card, CardContent, CardFooter } from '@/components/ui/card';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
@@ -22,38 +29,45 @@ import { login } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  email: z.string().email('An email is required for this role'),
+  role: z.enum(['tadmin', 'faculty', 'batch']),
+  identifier: z.string().min(1, 'Email or Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
 
-type LoginFormProps = {
-  role: string;
-};
+type LoginFormValues = z.infer<typeof formSchema>;
 
-export default function LoginForm({ role }: LoginFormProps) {
+export default function LoginForm() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-
-  const isBatchLogin = role === 'batch';
-
-  const batchSchema = z.object({
-    username: z.string().min(1, 'Username is required'),
-    password: z.string().min(1, 'Password is required'),
-  });
-
-  const currentSchema = isBatchLogin ? batchSchema : formSchema;
   
-  const form = useForm({
-    resolver: zodResolver(currentSchema),
-    defaultValues: isBatchLogin ? { username: '', password: '' } : { email: '', password: '' },
+  const form = useForm<LoginFormValues>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      role: 'batch',
+      identifier: '',
+      password: '',
+    },
   });
 
-  async function onSubmit(values: z.infer<typeof currentSchema>) {
+  const selectedRole = form.watch('role');
+
+  async function onSubmit(values: LoginFormValues) {
     setIsLoading(true);
-    const dashboardRole = role === 'tadmin' ? 'admin' : role;
+    
+    const credentials: { email?: string; username?: string; password?: string } = {
+        password: values.password,
+    };
+
+    if (values.role === 'batch') {
+        credentials.username = values.identifier;
+    } else {
+        credentials.email = values.identifier;
+    }
+
     try {
-      await login(values, dashboardRole);
+      await login(credentials, values.role);
+      const dashboardRole = values.role === 'tadmin' ? 'admin' : values.role;
       router.push(`/${dashboardRole}/dashboard`);
     } catch (error) {
       console.error("Login failed:", error);
@@ -72,35 +86,45 @@ export default function LoginForm({ role }: LoginFormProps) {
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <CardContent className="space-y-4 pt-6">
-            {isBatchLogin ? (
-                <FormField
-                  control={form.control}
-                  name="username"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Username</FormLabel>
+            <FormField
+              control={form.control}
+              name="role"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Login as</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
                       <FormControl>
-                        <Input placeholder="Enter your batch username" {...field} />
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select your role" />
+                        </SelectTrigger>
                       </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-            ) : (
-                <FormField
-                  control={form.control}
-                  name="email"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Email</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your email" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-            )}
+                      <SelectContent>
+                        <SelectItem value="tadmin">Admin</SelectItem>
+                        <SelectItem value="faculty">Faculty</SelectItem>
+                        <SelectItem value="batch">Batch</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="identifier"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>{selectedRole === 'batch' ? 'Username' : 'Email'}</FormLabel>
+                  <FormControl>
+                    <Input 
+                      placeholder={selectedRole === 'batch' ? 'Enter your batch username' : 'Enter your email'} 
+                      {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
             <FormField
               control={form.control}
               name="password"

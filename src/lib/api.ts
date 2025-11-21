@@ -12,7 +12,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         ...options.headers,
     };
 
-    if (token) {
+    if (token && !options.headers?.hasOwnProperty('Authorization')) {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -22,10 +22,11 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     });
 
     if (!response.ok) {
-        if (response.status === 204) { // Handle no content success
+        // For DELETE requests, a 200 or 204 status is often success with no content.
+        if (options.method === 'DELETE' && (response.status === 200 || response.status === 204)) {
             return {} as T;
         }
-        const err = await response.json().catch(() => ({}));
+        const err = await response.json().catch(() => ({ message: response.statusText || 'Failed to fetch from API' }));
         throw new Error(err.message || 'Failed to fetch from API');
     }
     
@@ -47,8 +48,7 @@ type LoginCredentials = {
 };
 
 export async function login(credentials: LoginCredentials, role: string): Promise<{ token: string }> {
-    const loginRole = role === 'admin' ? 'tadmin' : role;
-    const response = await fetcher<{ token: string, user: any }>(`/auth/login?role=${loginRole}`, {
+    const response = await fetcher<{ token: string, user: any }>(`/auth/login?role=${role}`, {
         method: 'POST',
         body: JSON.stringify(credentials),
     });
@@ -145,6 +145,16 @@ export async function deleteBatch(id: string): Promise<void> {
 
 
 // Problem Statements
+export async function getUnassignedProblemStatements(): Promise<ProblemStatement[]> {
+  const response = await fetcher<{
+    success: boolean;
+    count: number;
+    problemStatements: ProblemStatement[];
+  }>("/problem-statements/unassigned", { headers: { 'Authorization': '' } }); // Public endpoint
+  return response.problemStatements;
+}
+
+
 export async function getProblemStatements(): Promise<ProblemStatement[]> {
   const response = await fetcher<{
     success: boolean;
