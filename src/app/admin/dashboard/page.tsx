@@ -24,7 +24,7 @@ const AdminSidebar = () => (
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="#">
+      <SidebarMenuButton href="/admin/batches">
         <BookCopy />
         Manage Batches
       </SidebarMenuButton>
@@ -104,7 +104,25 @@ export default function AdminDashboard() {
 }
 
 function DashboardActionCard({ title, description, icon, actionText, asTrigger = false }: { title: string, description: string, icon: React.ReactNode, actionText: string, asTrigger?: boolean }) {
-    const ButtonComponent = asTrigger ? DialogTrigger : Button;
+    const ButtonComponent = asTrigger ? DialogTrigger : 'button';
+    const isLink = !asTrigger;
+
+    const content = (
+        <Button asChild={isLink} className="w-full group">
+            {isLink ? (
+                <Link href="#">
+                    {actionText}
+                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Link>
+            ) : (
+                <DialogTrigger className="w-full group-hover:bg-primary/90 inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 bg-primary text-primary-foreground h-10 px-4 py-2">
+                    {actionText}
+                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </DialogTrigger>
+            )}
+        </Button>
+    );
+
     return (
         <Card className="flex flex-col">
             <CardHeader className="flex-grow">
@@ -115,7 +133,7 @@ function DashboardActionCard({ title, description, icon, actionText, asTrigger =
                 <CardDescription>{description}</CardDescription>
             </CardHeader>
             <CardContent>
-                 <Button asChild className="w-full group">
+                 <Button asChild={!asTrigger} className="w-full group">
                     <ButtonComponent>
                         {actionText}
                         <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
