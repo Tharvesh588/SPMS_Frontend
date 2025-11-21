@@ -10,7 +10,7 @@ import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import React, { useEffect, useState } from 'react';
-import { getFaculties, getBatches } from '@/lib/api';
+import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -46,6 +46,8 @@ export default function AdminDashboard() {
     faculties: 0,
     batches: 0,
     projectsSelected: 0,
+    totalProblemStatements: 0,
+    assignedProblemStatements: 0,
   });
   const [isLoading, setIsLoading] = useState(true);
 
@@ -53,17 +55,21 @@ export default function AdminDashboard() {
     async function fetchData() {
       try {
         setIsLoading(true);
-        const [faculties, batches] = await Promise.all([
+        const [faculties, batches, problemStatements] = await Promise.all([
           getFaculties(),
           getBatches(),
+          getProblemStatements(),
         ]);
         
         const projectsSelected = batches.filter(batch => batch.project).length;
+        const assignedProblemStatements = problemStatements.filter(ps => ps.isAssigned).length;
 
         setStats({
           faculties: faculties.length,
           batches: batches.length,
           projectsSelected: projectsSelected,
+          totalProblemStatements: problemStatements.length,
+          assignedProblemStatements: assignedProblemStatements,
         });
       } catch (error) {
         console.error("Failed to fetch dashboard stats:", error);
@@ -77,10 +83,11 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex flex-col gap-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
               <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
               <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Projects Selected" value={stats.projectsSelected} icon={<CheckSquare className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
             </div>
 
             <Card>
