@@ -84,8 +84,6 @@ export default async function Home() {
 }
 
 function ProblemStatementCard({ ps }: { ps: ProblemStatement }) {
-    const facultyName = (typeof ps.facultyId === 'object' && ps.facultyId.name) ? ps.facultyId.name : 'N/A';
-    
     return (
         <Card className="flex flex-col h-full bg-card">
             <CardHeader>
@@ -93,7 +91,6 @@ function ProblemStatementCard({ ps }: { ps: ProblemStatement }) {
                     <CardTitle className="font-headline text-xl line-clamp-2">{ps.title}</CardTitle>
                     <Badge variant="secondary">Available</Badge>
                 </div>
-                <CardDescription>By: {facultyName}</CardDescription>
             </CardHeader>
             <CardContent className="flex-grow">
                 <p className="text-sm text-muted-foreground line-clamp-4">
