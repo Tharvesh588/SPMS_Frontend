@@ -6,7 +6,6 @@ import {
   SidebarContent,
   SidebarFooter,
   SidebarTrigger,
-  SidebarInset,
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton
@@ -42,10 +41,9 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
           <SidebarFooter>
             <SidebarMenu>
                 <SidebarMenuItem>
-                    <SidebarMenuButton asChild variant="default" className="w-full justify-start">
+                    <SidebarMenuButton asChild variant="default" className="w-full justify-start" title="Logout">
                         <Link href="/">
-                            <LogOut className="mr-2" />
-                            <span>Logout</span>
+                            <LogOut />
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
