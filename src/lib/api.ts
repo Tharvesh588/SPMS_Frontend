@@ -65,7 +65,7 @@ type CreateFacultyData = {
     quotaLimit: number;
 };
 
-export async function createFaculty(facultyData: CreateFacultyData): Promise<any> {
+export async function createFaculty(facultyData: CreateFacultyData): Promise<{success: boolean, faculty: Faculty}> {
     return fetcher("/admin/faculties", {
         method: 'POST',
         body: JSON.stringify(facultyData)

@@ -40,7 +40,7 @@ export default function Home() {
               <LoginCard
                 role="Admin"
                 description="Manage users, quotas, and system settings."
-                href="/login/admin"
+                href="/login/tadmin"
                 icon={<Shield className="w-8 h-8 text-primary" />}
               />
               <LoginCard
