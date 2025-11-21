@@ -14,6 +14,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import { useCallback, useEffect, useState } from 'react';
+import { getBatches } from '@/lib/api';
+import type { Batch } from '@/types';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreateBatchForm } from '@/components/admin/create-batch-form';
+
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -44,13 +51,38 @@ const AdminSidebar = () => (
   </SidebarMenu>
 );
 
-const sampleBatches = [
-    { _id: 'batch-1', name: 'Computer Science 2024', username: 'cs2024', project: 'AI-Powered E-commerce' },
-    { _id: 'batch-2', name: 'Information Tech 2024', username: 'it2024', project: 'Blockchain Voting' },
-    { _id: 'batch-3', name: 'Electronics 2024', username: 'ece2024', project: 'IoT Smart Home' },
-]
-
 export default function ManageBatchesPage() {
+  const [batches, setBatches] = useState<Batch[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const { toast } = useToast();
+
+  const fetchBatches = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const data = await getBatches();
+      setBatches(data);
+    } catch (error) {
+      console.error('Failed to fetch batches:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load batches",
+        description: (error as Error).message || "There was an error fetching the batch data. Please try again later.",
+      })
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+
+  useEffect(() => {
+    fetchBatches();
+  }, [fetchBatches]);
+
+  const handleBatchCreated = (newBatch: Batch) => {
+    setBatches(currentBatches => [...currentBatches, newBatch]);
+    setIsFormOpen(false);
+  }
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <Card>
@@ -59,12 +91,28 @@ export default function ManageBatchesPage() {
                     <CardTitle>Manage Batches</CardTitle>
                     <CardDescription>View, edit, and manage student batch accounts.</CardDescription>
                 </div>
-                <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Add Batch
-                </Button>
+                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                  <DialogTrigger asChild>
+                    <Button>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Add Batch
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create Batch Account</DialogTitle>
+                    </DialogHeader>
+                    <CreateBatchForm onBatchCreated={handleBatchCreated} />
+                  </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent>
+              {isLoading ? (
+                <div className="flex justify-center items-center h-64">
+                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                  <span className="ml-4 text-muted-foreground">Loading batches...</span>
+                </div>
+              ): (
                 <Table>
                     <TableHeader>
                         <TableRow>
@@ -75,9 +123,9 @@ export default function ManageBatchesPage() {
                         </TableRow>
                     </TableHeader>
                     <TableBody>
-                        {sampleBatches.map(batch => (
+                        {batches.map(batch => (
                             <TableRow key={batch._id}>
-                                <TableCell className="font-medium">{batch.name}</TableCell>
+                                <TableCell className="font-medium">{batch.batchName}</TableCell>
                                 <TableCell className="hidden md:table-cell">{batch.username}</TableCell>
                                 <TableCell>{batch.project || 'Not Selected'}</TableCell>
                                 <TableCell>
@@ -103,6 +151,7 @@ export default function ManageBatchesPage() {
                         ))}
                     </TableBody>
                 </Table>
+              )}
             </CardContent>
         </Card>
     </DashboardLayout>

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -16,6 +17,8 @@ import {
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createBatch } from '@/lib/api';
+import type { Batch } from '@/types';
 
 const formSchema = z.object({
   batchName: z.string().min(1, 'Batch name is required'),
@@ -23,7 +26,11 @@ const formSchema = z.object({
   password: z.string().min(6, 'Password must be at least 6 characters'),
 });
 
-export function CreateBatchForm() {
+type CreateBatchFormProps = {
+  onBatchCreated?: (newBatch: Batch) => void;
+};
+
+export function CreateBatchForm({ onBatchCreated }: CreateBatchFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
@@ -35,18 +42,26 @@ export function CreateBatchForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log('Creating batch:', values);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Batch Account Created",
-        description: `Account for ${values.batchName} has been successfully created.`,
-      });
-      form.reset();
-    }, 1500);
+    try {
+        const { batch } = await createBatch(values);
+        toast({
+            title: "Batch Account Created",
+            description: `Account for ${values.batchName} has been successfully created.`,
+        });
+        form.reset();
+        onBatchCreated?.(batch);
+    } catch(error) {
+        console.error('Failed to create batch:', error);
+        toast({
+            variant: "destructive",
+            title: "Failed to create batch",
+            description: (error as Error).message || "An unexpected error occurred.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
