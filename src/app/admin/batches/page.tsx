@@ -15,11 +15,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCallback, useEffect, useState } from 'react';
-import { getBatches } from '@/lib/api';
+import { getBatches, deleteBatch } from '@/lib/api';
 import type { Batch } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
+import { EditBatchForm } from '@/components/admin/edit-batch-form';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 
 
 const AdminSidebar = () => (
@@ -54,7 +56,10 @@ const AdminSidebar = () => (
 export default function ManageBatchesPage() {
   const [batches, setBatches] = useState<Batch[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const { toast } = useToast();
 
   const fetchBatches = useCallback(async () => {
@@ -80,7 +85,42 @@ export default function ManageBatchesPage() {
 
   const handleBatchCreated = (newBatch: Batch) => {
     setBatches(currentBatches => [...currentBatches, newBatch]);
-    setIsFormOpen(false);
+    setIsCreateFormOpen(false);
+  }
+
+  const handleBatchUpdated = (updatedBatch: Batch) => {
+    setBatches(current => current.map(b => b._id === updatedBatch._id ? updatedBatch : b));
+    setIsEditFormOpen(false);
+    setSelectedBatch(null);
+  }
+
+  const openEditDialog = (batch: Batch) => {
+    setSelectedBatch(batch);
+    setIsEditFormOpen(true);
+  }
+
+  const openDeleteDialog = (batch: Batch) => {
+    setSelectedBatch(batch);
+    setIsDeleteDialogOpen(true);
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedBatch) return;
+
+    try {
+      await deleteBatch(selectedBatch._id);
+      setBatches(current => current.filter(b => b._id !== selectedBatch._id));
+      toast({ title: "Batch Deleted", description: `Account for ${selectedBatch.batchName} has been deleted.`});
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Failed to delete batch",
+        description: (error as Error).message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedBatch(null);
+    }
   }
 
   return (
@@ -91,7 +131,7 @@ export default function ManageBatchesPage() {
                     <CardTitle>Manage Batches</CardTitle>
                     <CardDescription>View, edit, and manage student batch accounts.</CardDescription>
                 </div>
-                 <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                 <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                   <DialogTrigger asChild>
                     <Button>
                         <UserPlus className="mr-2 h-4 w-4" />
@@ -142,8 +182,8 @@ export default function ManageBatchesPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => openEditDialog(batch)}>Edit</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => openDeleteDialog(batch)} className="text-destructive">Delete</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -154,6 +194,26 @@ export default function ManageBatchesPage() {
               )}
             </CardContent>
         </Card>
+
+        {selectedBatch && (
+          <Dialog open={isEditFormOpen} onOpenChange={(isOpen) => { setIsEditFormOpen(isOpen); if (!isOpen) setSelectedBatch(null); }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Batch Account</DialogTitle>
+              </DialogHeader>
+              <EditBatchForm batch={selectedBatch} onBatchUpdated={handleBatchUpdated} />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteConfirm}
+          title="Are you sure you want to delete this batch?"
+          description="This action cannot be undone. This will permanently delete the batch account."
+        />
+
     </DashboardLayout>
   );
 }

@@ -22,13 +22,22 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     });
 
     if (!response.ok) {
+        if (response.status === 204) { // Handle no content success
+            return {} as T;
+        }
         const err = await response.json().catch(() => ({}));
         throw new Error(err.message || 'Failed to fetch from API');
     }
     
-    const data = await response.json();
-    return data;
+    // Handle responses that might not have a body (like DELETE)
+    const contentType = response.headers.get("content-type");
+    if (contentType && contentType.indexOf("application/json") !== -1) {
+        return response.json();
+    }
+    
+    return {} as T; // Return empty object for non-json responses
 }
+
 
 // Auth
 type LoginCredentials = {
@@ -37,7 +46,8 @@ type LoginCredentials = {
   password?: string;
 };
 
-export async function login(credentials: LoginCredentials): Promise<{ token: string }> {
+export async function login(credentials: LoginCredentials, role: string): Promise<{ token: string }> {
+    const loginRole = role === 'admin' ? 'tadmin' : role;
     const response = await fetcher<{ token: string, user: any }>("/auth/login", {
         method: 'POST',
         body: JSON.stringify(credentials),
@@ -48,7 +58,7 @@ export async function login(credentials: LoginCredentials): Promise<{ token: str
     return response;
 }
 
-// Fetch real faculties
+// Faculty
 export async function getFaculties(): Promise<Faculty[]> {
   const response = await fetcher<{
     success: boolean;
@@ -72,20 +82,26 @@ export async function createFaculty(facultyData: CreateFacultyData): Promise<{su
     });
 }
 
-
-type CreateBatchData = {
-    batchName: string;
-    username: string;
-    password: string;
+type UpdateFacultyData = {
+    name?: string;
+    email?: string;
+    quotaLimit?: number;
 };
-
-export async function createBatch(batchData: CreateBatchData): Promise<{success: boolean, batch: Batch}> {
-    return fetcher("/admin/batches", {
-        method: 'POST',
-        body: JSON.stringify(batchData)
+export async function updateFaculty(id: string, facultyData: UpdateFacultyData): Promise<{success: boolean, faculty: Faculty}> {
+    return fetcher(`/admin/faculties/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(facultyData)
     });
 }
 
+export async function deleteFaculty(id: string): Promise<void> {
+    await fetcher(`/admin/faculties/${id}`, {
+        method: 'DELETE',
+    });
+}
+
+
+// Batches
 export async function getBatches(): Promise<Batch[]> {
   const response = await fetcher<{
     success: boolean;
@@ -94,6 +110,39 @@ export async function getBatches(): Promise<Batch[]> {
   }>("/admin/batches");
   return response.batches;
 }
+
+type CreateBatchData = {
+    batchName: string;
+    username: string;
+    password: string;
+};
+
+export async function createBatch(batchData: CreateBatchData): Promise<{success: boolean, batch: Batch}> {
+    const response = await fetcher<{success: boolean, batch: Batch}>("/admin/batches", {
+        method: 'POST',
+        body: JSON.stringify(batchData)
+    });
+    return response;
+}
+
+type UpdateBatchData = {
+    batchName?: string;
+    username?: string;
+};
+
+export async function updateBatch(id: string, batchData: UpdateBatchData): Promise<{success: boolean, batch: Batch}> {
+    return fetcher(`/admin/batches/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(batchData)
+    });
+}
+
+export async function deleteBatch(id: string): Promise<void> {
+    await fetcher(`/admin/batches/${id}`, {
+        method: 'DELETE',
+    });
+}
+
 
 // Problem Statements - Returns mock data to prevent errors
 export async function getProblemStatements(): Promise<ProblemStatement[]> {

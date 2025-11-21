@@ -17,54 +17,47 @@ import {
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createFaculty } from '@/lib/api';
+import { updateFaculty } from '@/lib/api';
 import type { Faculty } from '@/types';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Faculty name is required'),
   email: z.string().email('Invalid email address'),
-  password: z.string().min(6, 'Password must be at least 6 characters'),
-  quotaLimit: z.coerce.number().min(1, 'Quota must be at least 1'),
+  quotaLimit: z.coerce.number().min(0, 'Quota must be 0 or more'),
 });
 
-type CreateFacultyFormProps = {
-  onFacultyCreated?: (newFaculty: Faculty) => void;
+type EditFacultyFormProps = {
+  faculty: Faculty;
+  onFacultyUpdated: (updatedFaculty: Faculty) => void;
 };
 
-export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) {
+export function EditFacultyForm({ faculty, onFacultyUpdated }: EditFacultyFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: '',
-      email: '',
-      password: '',
-      quotaLimit: 5,
+      name: faculty.name,
+      email: faculty.email,
+      quotaLimit: faculty.quotaLimit,
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-      const { faculty } = await createFaculty({
-          name: values.name,
-          email: values.email,
-          password: values.password,
-          quotaLimit: values.quotaLimit,
-      });
+      const { faculty: updatedFaculty } = await updateFaculty(faculty._id, values);
       toast({
-        title: "Faculty Account Created",
-        description: `Account for ${values.name} has been successfully created.`,
+        title: "Faculty Account Updated",
+        description: `Account for ${values.name} has been successfully updated.`,
       });
-      form.reset();
-      onFacultyCreated?.(faculty);
+      onFacultyUpdated(updatedFaculty);
     } catch (error) {
         const err = error as Error;
-        console.error('Failed to create faculty:', error);
+        console.error('Failed to update faculty:', error);
         toast({
             variant: "destructive",
-            title: "Failed to create faculty",
+            title: "Failed to update faculty",
             description: err.message || "An unexpected error occurred.",
         });
     } finally {
@@ -103,19 +96,6 @@ export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) 
         />
         <FormField
           control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <Input type="password" placeholder="Enter a secure password" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="quotaLimit"
           render={({ field }) => (
             <FormItem>
@@ -129,9 +109,10 @@ export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) 
         />
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-          Create Faculty Account
+          Update Faculty Account
         </Button>
       </form>
     </Form>
   );
 }
+

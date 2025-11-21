@@ -51,9 +51,10 @@ export default function LoginForm({ role }: LoginFormProps) {
 
   async function onSubmit(values: z.infer<typeof currentSchema>) {
     setIsLoading(true);
+    const dashboardRole = role === 'tadmin' ? 'admin' : role;
     try {
-      await login(values);
-      router.push(`/${role}/dashboard`);
+      await login(values, dashboardRole);
+      router.push(`/${dashboardRole}/dashboard`);
     } catch (error) {
       console.error("Login failed:", error);
       toast({

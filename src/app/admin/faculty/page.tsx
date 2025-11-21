@@ -16,11 +16,13 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useCallback, useEffect, useState } from 'react';
-import { getFaculties } from '@/lib/api';
+import { getFaculties, deleteFaculty } from '@/lib/api';
 import type { Faculty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
+import { EditFacultyForm } from '@/components/admin/edit-faculty-form';
+import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 
 
 const AdminSidebar = () => (
@@ -55,7 +57,10 @@ const AdminSidebar = () => (
 export default function ManageFacultyPage() {
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   const { toast } = useToast();
 
   const fetchFaculties = useCallback(async () => {
@@ -79,10 +84,46 @@ export default function ManageFacultyPage() {
     fetchFaculties();
   }, [fetchFaculties]);
 
-  const handleFacultyCreated = () => {
-    fetchFaculties();
-    setIsFormOpen(false);
+  const handleFacultyCreated = (newFaculty: Faculty) => {
+    setFaculties(current => [...current, newFaculty]);
+    setIsCreateFormOpen(false);
   }
+
+  const handleFacultyUpdated = (updatedFaculty: Faculty) => {
+    setFaculties(current => current.map(f => f._id === updatedFaculty._id ? updatedFaculty : f));
+    setIsEditFormOpen(false);
+    setSelectedFaculty(null);
+  }
+  
+  const openEditDialog = (faculty: Faculty) => {
+    setSelectedFaculty(faculty);
+    setIsEditFormOpen(true);
+  }
+
+  const openDeleteDialog = (faculty: Faculty) => {
+    setSelectedFaculty(faculty);
+    setIsDeleteDialogOpen(true);
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (!selectedFaculty) return;
+
+    try {
+      await deleteFaculty(selectedFaculty._id);
+      setFaculties(current => current.filter(f => f._id !== selectedFaculty._id));
+      toast({ title: "Faculty Deleted", description: `Account for ${selectedFaculty.name} has been deleted.`});
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Failed to delete faculty",
+        description: (error as Error).message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedFaculty(null);
+    }
+  }
+
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
@@ -92,7 +133,7 @@ export default function ManageFacultyPage() {
                     <CardTitle>Manage Faculty</CardTitle>
                     <CardDescription>View, edit, and manage faculty accounts.</CardDescription>
                 </div>
-                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
+                <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                   <DialogTrigger asChild>
                     <Button>
                         <UserPlus className="mr-2 h-4 w-4" />
@@ -147,8 +188,8 @@ export default function ManageFacultyPage() {
                                         </DropdownMenuTrigger>
                                         <DropdownMenuContent align="end">
                                         <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem>Delete</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => openEditDialog(faculty)}>Edit</DropdownMenuItem>
+                                        <DropdownMenuItem onSelect={() => openDeleteDialog(faculty)} className="text-destructive">Delete</DropdownMenuItem>
                                         </DropdownMenuContent>
                                     </DropdownMenu>
                                 </TableCell>
@@ -159,6 +200,26 @@ export default function ManageFacultyPage() {
               )}
             </CardContent>
         </Card>
+        
+        {selectedFaculty && (
+          <Dialog open={isEditFormOpen} onOpenChange={(isOpen) => { setIsEditFormOpen(isOpen); if (!isOpen) setSelectedFaculty(null); }}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Edit Faculty Account</DialogTitle>
+              </DialogHeader>
+              <EditFacultyForm faculty={selectedFaculty} onFacultyUpdated={handleFacultyUpdated} />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        <ConfirmDeleteDialog
+          open={isDeleteDialogOpen}
+          onOpenChange={setIsDeleteDialogOpen}
+          onConfirm={handleDeleteConfirm}
+          title="Are you sure you want to delete this faculty?"
+          description="This action cannot be undone. This will permanently delete the faculty account."
+        />
+
     </DashboardLayout>
   );
 }
