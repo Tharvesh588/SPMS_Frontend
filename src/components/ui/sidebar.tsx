@@ -4,6 +4,7 @@ import * as React from "react"
 import { Slot } from "@radix-ui/react-slot"
 import { VariantProps, cva } from "class-variance-authority"
 import { PanelLeft } from "lucide-react"
+import Link from "next/link";
 
 import { useIsMobile } from "@/hooks/use-mobile"
 import { cn } from "@/lib/utils"
@@ -513,45 +514,92 @@ const SidebarMenuButton = React.forwardRef<
     asChild?: boolean
     isActive?: boolean
     tooltip?: string | React.ComponentProps<typeof TooltipContent>
+    href?: string
   } & VariantProps<typeof sidebarMenuButtonVariants>
 >(
   (
     {
-      asChild = false,
+      asChild: asChildProp,
       isActive = false,
       variant = "default",
       size = "default",
       tooltip,
       className,
       children,
-      title,
+      href,
       ...props
     },
     ref
   ) => {
-    const Comp = asChild ? Slot : "button"
     const { isMobile, state } = useSidebar()
+    const asChild = asChildProp || href
 
-    const button = (
-      <Comp
-        ref={ref}
-        data-sidebar="menu-button"
-        data-size={size}
-        data-active={isActive}
-        className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-        {...props}
-      >
+    const buttonContent = (
         <div className="flex items-center gap-2">
             {children}
-            <span className={cn("transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>
-                {title}
-            </span>
+            <span className={cn("flex-1 transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>{props.title}</span>
         </div>
-      </Comp>
     )
 
+    const button = (
+        <button
+            ref={ref as React.Ref<HTMLButtonElement>}
+            data-sidebar="menu-button"
+            data-size={size}
+            data-active={isActive}
+            className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+            {...props}
+        >
+            {buttonContent}
+        </button>
+    );
+
+    if (href) {
+        const linkButton = (
+             <Link href={href} passHref legacyBehavior>
+                <a
+                    ref={ref as React.Ref<HTMLAnchorElement>}
+                    data-sidebar="menu-button"
+                    data-size={size}
+                    data-active={isActive}
+                    className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
+                    {...props}
+                >
+                    {buttonContent}
+                </a>
+            </Link>
+        )
+
+        if (!tooltip && state === 'collapsed') {
+            tooltip = props.title;
+        }
+
+        if (!tooltip) {
+            return linkButton
+        }
+    
+        if (typeof tooltip === "string") {
+          tooltip = {
+            children: tooltip,
+          }
+        }
+        
+        return (
+          <Tooltip>
+            <TooltipTrigger asChild>{linkButton}</TooltipTrigger>
+            <TooltipContent
+              side="right"
+              align="center"
+              hidden={state !== "collapsed" || isMobile}
+              {...tooltip}
+            />
+          </Tooltip>
+        )
+    }
+
+
     if (!tooltip && state === 'collapsed') {
-      tooltip = title;
+      tooltip = props.title;
     }
 
     if (!tooltip) {
