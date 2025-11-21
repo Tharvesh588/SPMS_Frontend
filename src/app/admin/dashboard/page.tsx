@@ -42,7 +42,7 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex flex-col gap-6">
-            <Card>
+            <Card className="col-span-1 lg:col-span-3">
                 <CardHeader>
                     <CardTitle>Welcome, Admin</CardTitle>
                     <CardDescription>Manage the entire project allocation system from here.</CardDescription>
