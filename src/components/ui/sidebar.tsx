@@ -540,10 +540,8 @@ const SidebarMenuButton = React.forwardRef<
         className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
         {...props}
       >
-        <>
         {children}
         <span className={cn("flex-1 transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>{props.title}</span>
-        </>
       </Comp>
     )
 
@@ -745,5 +743,3 @@ export {
   SidebarTrigger,
   useSidebar,
 }
-
-    
