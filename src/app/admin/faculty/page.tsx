@@ -1,3 +1,4 @@
+
 'use client';
 
 import { DashboardLayout } from '@/components/dashboard-layout';
@@ -18,6 +19,9 @@ import { useEffect, useState } from 'react';
 import { getFaculties } from '@/lib/api';
 import type { Faculty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
+
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -82,10 +86,20 @@ export default function ManageFacultyPage() {
                     <CardTitle>Manage Faculty</CardTitle>
                     <CardDescription>View, edit, and manage faculty accounts.</CardDescription>
                 </div>
-                <Button>
-                    <UserPlus className="mr-2 h-4 w-4" />
-                    Add Faculty
-                </Button>
+                <Dialog>
+                  <DialogTrigger asChild>
+                    <Button>
+                        <UserPlus className="mr-2 h-4 w-4" />
+                        Add Faculty
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                        <DialogTitle>Create Faculty Account</DialogTitle>
+                    </DialogHeader>
+                    <CreateFacultyForm />
+                  </DialogContent>
+                </Dialog>
             </CardHeader>
             <CardContent>
               {isLoading ? (
