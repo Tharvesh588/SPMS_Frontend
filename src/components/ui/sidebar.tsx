@@ -160,59 +160,17 @@ SidebarProvider.displayName = "SidebarProvider"
 
 const Sidebar = React.forwardRef<
   HTMLDivElement,
-  React.ComponentProps<"div"> & {
-    side?: "left" | "right"
-    variant?: "sidebar" | "floating" | "inset"
-    collapsible?: "offcanvas" | "icon" | "none"
-  }
+  React.ComponentProps<"div">
 >(
   (
     {
-      side = "left",
-      variant = "sidebar",
-      collapsible = "icon",
       className,
       children,
       ...props
     },
     ref
   ) => {
-    const { isMobile, state, openMobile, setOpenMobile } = useSidebar()
-
-    if (collapsible === "none") {
-      return (
-        <div
-          className={cn(
-            "flex h-full w-[--sidebar-width] flex-col bg-sidebar text-sidebar-foreground",
-            className
-          )}
-          ref={ref}
-          {...props}
-        >
-          {children}
-        </div>
-      )
-    }
-
-    if (isMobile) {
-      return (
-        <Sheet open={openMobile} onOpenChange={setOpenMobile} {...props}>
-          <SheetContent
-            data-sidebar="sidebar"
-            data-mobile="true"
-            className="w-[--sidebar-width] bg-sidebar p-0 text-sidebar-foreground [&>button]:hidden"
-            style={
-              {
-                "--sidebar-width": SIDEBAR_WIDTH_MOBILE,
-              } as React.CSSProperties
-            }
-            side={side}
-          >
-            <div className="flex h-full w-full flex-col">{children}</div>
-          </SheetContent>
-        </Sheet>
-      )
-    }
+    const { state } = useSidebar()
 
     return (
       <aside
@@ -462,23 +420,23 @@ const SidebarGroupContent = React.forwardRef<
 SidebarGroupContent.displayName = "SidebarGroupContent"
 
 const SidebarMenu = React.forwardRef<
-  HTMLUListElement,
-  React.ComponentProps<"ul">
+  HTMLDivElement,
+  React.ComponentProps<"div">
 >(({ className, ...props }, ref) => (
-  <ul
+  <div
     ref={ref}
     data-sidebar="menu"
-    className={cn("flex w-full min-w-0 flex-col gap-1 p-2", className)}
+    className={cn("flex w-full min-w-0 flex-row md:flex-col gap-1 p-2 md:p-0", className)}
     {...props}
   />
 ))
 SidebarMenu.displayName = "SidebarMenu"
 
 const SidebarMenuItem = React.forwardRef<
-  HTMLLIElement,
-  React.ComponentProps<"li">
+  HTMLDivElement,
+  React.ComponentProps<"div">
 >(({ className, ...props }, ref) => (
-  <li
+  <div
     ref={ref}
     data-sidebar="menu-item"
     className={cn("group/menu-item relative my-[5px]", className)}
@@ -488,7 +446,7 @@ const SidebarMenuItem = React.forwardRef<
 SidebarMenuItem.displayName = "SidebarMenuItem"
 
 const sidebarMenuButtonVariants = cva(
-  "peer/menu-button flex w-full items-center justify-start gap-2 overflow-hidden rounded-md p-3 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary data-[active=true]:font-medium data-[active=true]:text-sidebar-primary-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:!p-2 [&>svg]:size-4 [&>svg]:shrink-0",
+  "peer/menu-button flex w-full items-center justify-start gap-2 overflow-hidden rounded-md p-3 text-left text-sm outline-none ring-sidebar-ring transition-[width,height,padding] hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:ring-2 active:bg-sidebar-accent active:text-sidebar-accent-foreground disabled:pointer-events-none disabled:opacity-50 group-has-[[data-sidebar=menu-action]]/menu-item:pr-8 aria-disabled:pointer-events-none aria-disabled:opacity-50 data-[active=true]:bg-sidebar-primary data-[active=true]:font-medium data-[active=true]:text-sidebar-primary-foreground data-[state=open]:hover:bg-sidebar-accent data-[state=open]:hover:text-sidebar-accent-foreground group-data-[state=collapsed]:!h-10 group-data-[state=collapsed]:!w-10 group-data-[state=collapsed]:justify-center group-data-[state=collapsed]:!p-2",
   {
     variants: {
       variant: {
@@ -536,41 +494,36 @@ const SidebarMenuButton = React.forwardRef<
     const asChild = asChildProp || href
 
     const buttonContent = (
-        <div className="flex items-center gap-2">
-            {children}
-            <span className={cn("flex-1 transition-opacity duration-200", state === 'collapsed' ? 'opacity-0' : 'opacity-100')}>{props.title}</span>
-        </div>
-    )
+      <div className={cn("flex items-center gap-2", isMobile && "flex-col text-xs")}>
+          {children}
+          <span className={cn("flex-1 transition-opacity duration-200", state === 'collapsed' && !isMobile ? 'opacity-0' : 'opacity-100')}>{props.title}</span>
+      </div>
+  )
 
-    const button = (
-        <button
-            ref={ref as React.Ref<HTMLButtonElement>}
-            data-sidebar="menu-button"
-            data-size={size}
-            data-active={isActive}
-            className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-            {...props}
-        >
-            {buttonContent}
-        </button>
-    );
+    const commonProps = {
+        'data-sidebar': "menu-button",
+        'data-size': size,
+        'data-active': isActive,
+        className: cn(
+          sidebarMenuButtonVariants({ variant, size }), 
+          className,
+          isMobile && "flex-col !h-auto !p-2 data-[active=true]:bg-transparent data-[active=true]:text-primary data-[active=true]:font-bold"
+        ),
+        ...props
+    };
 
     if (href) {
         const linkButton = (
              <Link 
                 href={href} 
                 ref={ref as React.Ref<HTMLAnchorElement>}
-                data-sidebar="menu-button"
-                data-size={size}
-                data-active={isActive}
-                className={cn(sidebarMenuButtonVariants({ variant, size }), className)}
-                {...props}
+                {...commonProps}
               >
                 {buttonContent}
             </Link>
         )
 
-        if (!tooltip && state === 'collapsed') {
+        if (!tooltip && state === 'collapsed' && !isMobile) {
             tooltip = props.title;
         }
 
@@ -597,8 +550,16 @@ const SidebarMenuButton = React.forwardRef<
         )
     }
 
+    const button = (
+      <button
+          ref={ref as React.Ref<HTMLButtonElement>}
+          {...commonProps}
+      >
+          {buttonContent}
+      </button>
+  );
 
-    if (!tooltip && state === 'collapsed') {
+    if (!tooltip && state === 'collapsed' && !isMobile) {
       tooltip = props.title;
     }
 
