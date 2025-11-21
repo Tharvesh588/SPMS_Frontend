@@ -7,3 +7,12 @@ export type Faculty = {
   createdAt: string;
   updatedAt: string;
 };
+
+export type Batch = {
+    _id: string;
+    name: string;
+    username: string;
+    project?: string; // or a more detailed project type
+    createdAt: string;
+    updatedAt: string;
+}
