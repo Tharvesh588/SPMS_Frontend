@@ -48,7 +48,7 @@ type LoginCredentials = {
 
 export async function login(credentials: LoginCredentials, role: string): Promise<{ token: string }> {
     const loginRole = role === 'admin' ? 'tadmin' : role;
-    const response = await fetcher<{ token: string, user: any }>("/auth/login", {
+    const response = await fetcher<{ token: string, user: any }>(`/auth/login?role=${loginRole}`, {
         method: 'POST',
         body: JSON.stringify(credentials),
     });
@@ -144,14 +144,41 @@ export async function deleteBatch(id: string): Promise<void> {
 }
 
 
-// Problem Statements - Returns mock data to prevent errors
+// Problem Statements
 export async function getProblemStatements(): Promise<ProblemStatement[]> {
-  // const response = await fetcher<{
-  //   success: boolean;
-  //   count: number;
-  //   problemStatements: ProblemStatement[];
-  // }>("/admin/problem-statements");
-  // return response.problemStatements;
-  console.warn("Using mock data for getProblemStatements as the admin endpoint is not available.");
-  return Promise.resolve([]);
+  const response = await fetcher<{
+    success: boolean;
+    count: number;
+    problemStatements: ProblemStatement[];
+  }>("/admin/problem-statements");
+  return response.problemStatements;
+}
+
+type CreateProblemStatementData = {
+    title: string;
+    description: string;
+    gDriveLink: string;
+    facultyId: string;
+};
+
+export async function createProblemStatement(psData: CreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
+    return fetcher('/admin/problem-statements', {
+        method: 'POST',
+        body: JSON.stringify(psData)
+    });
+}
+
+type UpdateProblemStatementData = Partial<CreateProblemStatementData> & { isAssigned?: boolean };
+
+export async function updateProblemStatement(id: string, psData: UpdateProblemStatementData): Promise<{success: boolean, problemStatement: ProblemStatement}> {
+    return fetcher(`/admin/problem-statements/${id}`, {
+        method: 'PUT',
+        body: JSON.stringify(psData)
+    });
+}
+
+export async function deleteProblemStatement(id: string): Promise<void> {
+    await fetcher(`/admin/problem-statements/${id}`, {
+        method: 'DELETE',
+    });
 }

@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useForm } from 'react-hook-form';
@@ -21,10 +22,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { problemStatements } from '@/lib/data'; // Assuming faculty list can be derived or fetched
+import { createProblemStatement, getFaculties } from '@/lib/api';
+import type { ProblemStatement, Faculty } from '@/types';
 
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
@@ -33,11 +35,32 @@ const formSchema = z.object({
   facultyId: z.string().min(1, 'You must select a faculty'),
 });
 
-const facultyMembers = [...new Set(problemStatements.map(p => p.faculty))].map((name, index) => ({ id: `faculty-${index+1}`, name }));
+type UploadProblemStatementFormProps = {
+    onStatementCreated?: (newStatement: ProblemStatement) => void;
+};
 
-export function UploadProblemStatementForm() {
+
+export function UploadProblemStatementForm({ onStatementCreated }: UploadProblemStatementFormProps) {
   const [isLoading, setIsLoading] = useState(false);
+  const [faculties, setFaculties] = useState<Faculty[]>([]);
   const { toast } = useToast();
+
+  useEffect(() => {
+    async function fetchFaculties() {
+        try {
+            const data = await getFaculties();
+            setFaculties(data);
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: 'Failed to load faculties',
+                description: 'Could not fetch the list of faculties for selection.',
+            });
+        }
+    }
+    fetchFaculties();
+  }, [toast]);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -48,18 +71,31 @@ export function UploadProblemStatementForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log('Uploading problem statement:', values);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
-      toast({
-        title: "Problem Statement Uploaded",
-        description: `"${values.title}" has been successfully uploaded.`,
-      });
-      form.reset();
-    }, 1500);
+    try {
+        const { ps } = await createProblemStatement(values);
+        toast({
+            title: "Problem Statement Uploaded",
+            description: `"${values.title}" has been successfully uploaded.`,
+        });
+        form.reset();
+        if(onStatementCreated) {
+            // The API returns the created PS, but it might not be populated with faculty details.
+            // We find the faculty from our list to provide a fully populated object.
+            const faculty = faculties.find(f => f._id === ps.facultyId);
+            const populatedPs = { ...ps, facultyId: faculty || ps.facultyId };
+            onStatementCreated(populatedPs);
+        }
+    } catch(error) {
+        toast({
+            variant: "destructive",
+            title: "Upload Failed",
+            description: (error as Error).message || "An unexpected error occurred.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
@@ -117,8 +153,8 @@ export function UploadProblemStatementForm() {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    {facultyMembers.map(faculty => (
-                        <SelectItem key={faculty.id} value={faculty.id}>{faculty.name}</SelectItem>
+                    {faculties.map(faculty => (
+                        <SelectItem key={faculty._id} value={faculty._id}>{faculty.name}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>

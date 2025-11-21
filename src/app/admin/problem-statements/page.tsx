@@ -20,10 +20,9 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { problemStatements as mockProblemStatements, type ProblemStatement as MockProblemStatement } from '@/lib/data';
+import { getProblemStatements, deleteProblemStatement } from '@/lib/api';
+import type { ProblemStatement, Faculty } from '@/types';
 
-// This is a temporary type, will be replaced with the real one from src/types
-type ProblemStatement = MockProblemStatement & { _id: string; isAssigned: boolean; faculty: { name: string } };
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -63,29 +62,30 @@ export default function ManageProblemStatementsPage() {
   const { toast } = useToast();
 
   const fetchStatements = useCallback(async () => {
-    setIsLoading(true);
-    // Replace with actual API call
-    setTimeout(() => {
-      const formattedData = mockProblemStatements.map((ps, index) => ({
-        ...ps,
-        _id: ps.id,
-        isAssigned: index % 2 === 0, // Mock data for assigned status
-        faculty: { name: ps.faculty },
-      }));
-      setStatements(formattedData);
+    try {
+      setIsLoading(true);
+      const data = await getProblemStatements();
+      setStatements(data);
+    } catch (error) {
+      console.error('Failed to fetch statements:', error);
+      toast({
+        variant: "destructive",
+        title: "Failed to load statements",
+        description: (error as Error).message || "There was an error fetching the data.",
+      });
+    } finally {
       setIsLoading(false);
-    }, 1000);
-  }, []);
+    }
+  }, [toast]);
 
   useEffect(() => {
     fetchStatements();
   }, [fetchStatements]);
 
   const handleStatementCreated = (newStatement: ProblemStatement) => {
-    // This will be implemented when API is ready
-    toast({ title: "Success", description: "New problem statement created." });
+    setStatements(current => [...current, newStatement]);
     setIsCreateFormOpen(false);
-    fetchStatements(); // Refetch to show the new data
+    toast({ title: "Success", description: "New problem statement created." });
   }
 
   const openDeleteDialog = (statement: ProblemStatement) => {
@@ -95,10 +95,27 @@ export default function ManageProblemStatementsPage() {
 
   const handleDeleteConfirm = async () => {
     if (!selectedStatement) return;
-    // Replace with actual API call
-    toast({ title: "Dummy Delete", description: `Statement "${selectedStatement.title}" would be deleted.`});
-    setIsDeleteDialogOpen(false);
-    setSelectedStatement(null);
+    try {
+      await deleteProblemStatement(selectedStatement._id);
+      setStatements(current => current.filter(s => s._id !== selectedStatement._id));
+      toast({ title: "Statement Deleted", description: `Statement "${selectedStatement.title}" has been deleted.`});
+    } catch (error) {
+       toast({
+        variant: "destructive",
+        title: "Failed to delete statement",
+        description: (error as Error).message || "An unexpected error occurred.",
+      });
+    } finally {
+      setIsDeleteDialogOpen(false);
+      setSelectedStatement(null);
+    }
+  }
+
+  const getFacultyName = (facultyId: string | Faculty) => {
+    if (typeof facultyId === 'object' && facultyId !== null && 'name' in facultyId) {
+      return facultyId.name;
+    }
+    return 'N/A';
   }
 
   return (
@@ -120,8 +137,7 @@ export default function ManageProblemStatementsPage() {
                     <DialogHeader>
                         <DialogTitle>Add New Problem Statement</DialogTitle>
                     </DialogHeader>
-                    {/* When API is ready, we might need a specific onStatementCreated prop */}
-                    <UploadProblemStatementForm />
+                    <UploadProblemStatementForm onStatementCreated={handleStatementCreated} />
                   </DialogContent>
                 </Dialog>
             </CardHeader>
@@ -145,7 +161,7 @@ export default function ManageProblemStatementsPage() {
                         {statements.map(statement => (
                             <TableRow key={statement._id}>
                                 <TableCell className="font-medium">{statement.title}</TableCell>
-                                <TableCell>{statement.faculty.name}</TableCell>
+                                <TableCell>{getFacultyName(statement.facultyId)}</TableCell>
                                 <TableCell>
                                     <Badge variant={statement.isAssigned ? "secondary" : "default"}>
                                         {statement.isAssigned ? 'Assigned' : 'Available'}

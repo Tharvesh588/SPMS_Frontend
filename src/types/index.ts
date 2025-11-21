@@ -1,3 +1,4 @@
+
 export type Faculty = {
   _id: string;
   name: string;
@@ -22,9 +23,9 @@ export type ProblemStatement = {
   title: string;
   description: string;
   gDriveLink: string;
-  facultyId: string;
+  facultyId: Faculty | string;
   uploadedBy: 'admin' | 'faculty';
-  isAvailable: boolean;
+  isAssigned: boolean;
   createdAt: string;
   updatedAt: string;
 };
