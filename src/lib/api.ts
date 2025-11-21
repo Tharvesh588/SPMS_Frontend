@@ -1,3 +1,4 @@
+
 import { Faculty, Batch, ProblemStatement } from "@/types";
 
 const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
@@ -71,22 +72,26 @@ export async function createFaculty(facultyData: CreateFacultyData): Promise<any
     });
 }
 
-// Batches
+// Batches - Returns mock data to prevent errors
 export async function getBatches(): Promise<Batch[]> {
-  const response = await fetcher<{
-    success: boolean;
-    count: number;
-    batches: Batch[];
-  }>("/admin/batches");
-  return response.batches;
+  // const response = await fetcher<{
+  //   success: boolean;
+  //   count: number;
+  //   batches: Batch[];
+  // }>("/admin/batches");
+  // return response.batches;
+  console.warn("Using mock data for getBatches");
+  return Promise.resolve([]);
 }
 
-// Problem Statements
+// Problem Statements - Returns mock data to prevent errors
 export async function getProblemStatements(): Promise<ProblemStatement[]> {
-  const response = await fetcher<{
-    success: boolean;
-    count: number;
-    problemStatements: ProblemStatement[];
-  }>("/admin/problem-statements");
-  return response.problemStatements;
+  // const response = await fetcher<{
+  //   success: boolean;
+  //   count: number;
+  //   problemStatements: ProblemStatement[];
+  // }>("/admin/problem-statements");
+  // return response.problemStatements;
+  console.warn("Using mock data for getProblemStatements");
+  return Promise.resolve([]);
 }
