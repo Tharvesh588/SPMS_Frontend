@@ -1,8 +1,8 @@
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Users, LayoutDashboard, FilePlus2 } from 'lucide-react';
+import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRight } from 'lucide-react';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -15,7 +15,13 @@ const AdminSidebar = () => (
     <SidebarMenuItem>
       <SidebarMenuButton>
         <Users />
-        Manage Quotas
+        Manage Faculty
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+    <SidebarMenuItem>
+      <SidebarMenuButton>
+        <BookCopy />
+        Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
@@ -30,29 +36,52 @@ const AdminSidebar = () => (
 export default function AdminDashboard() {
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-        <div className="grid gap-6 md:grid-cols-2">
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Manage Quotas</CardTitle>
-                    <Users className="h-4 w-4 text-muted-foreground" />
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+            <Card className="col-span-1 lg:col-span-3">
+                <CardHeader>
+                    <CardTitle>Welcome, Admin</CardTitle>
+                    <CardDescription>Manage the entire project allocation system from here.</CardDescription>
                 </CardHeader>
-                <CardContent>
-                    <div className="text-2xl font-bold">12 / 20</div>
-                    <p className="text-xs text-muted-foreground">Coordinators assigned to batches</p>
-                    <Button size="sm" className="mt-4">Manage</Button>
-                </CardContent>
             </Card>
-            <Card>
-                <CardHeader className="flex flex-row items-center justify-between pb-2">
-                    <CardTitle className="text-sm font-medium">Upload Problem Statement</CardTitle>
-                    <Upload className="h-4 w-4 text-muted-foreground" />
-                </CardHeader>
-                <CardContent>
-                    <p className="text-xs text-muted-foreground">Add a new problem statement for students to select.</p>
-                    <Button size="sm" className="mt-4">Upload New PS</Button>
-                </CardContent>
-            </Card>
+            <DashboardActionCard 
+                title="Create Faculty Account"
+                description="Onboard new faculty members by creating their accounts."
+                icon={<UserPlus className="h-8 w-8 text-accent" />}
+                actionText="Create Account"
+            />
+            <DashboardActionCard 
+                title="Create Batch Account"
+                description="Create accounts for new student batches."
+                icon={<Users className="h-8 w-8 text-accent" />}
+                actionText="Create Account"
+            />
+            <DashboardActionCard 
+                title="Upload Problem Statement"
+                description="Add a new problem statement on behalf of any faculty."
+                icon={<Upload className="h-8 w-8 text-accent" />}
+                actionText="Upload Now"
+            />
         </div>
     </DashboardLayout>
   );
+}
+
+function DashboardActionCard({ title, description, icon, actionText }: { title: string, description: string, icon: React.ReactNode, actionText: string }) {
+    return (
+        <Card className="flex flex-col">
+            <CardHeader className="flex-grow">
+                <div className="mb-4 flex justify-center items-center h-16 w-16 rounded-full bg-accent/10">
+                    {icon}
+                </div>
+                <CardTitle>{title}</CardTitle>
+                <CardDescription>{description}</CardDescription>
+            </CardHeader>
+            <CardContent>
+                 <Button className="w-full group">
+                    {actionText}
+                    <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
+                </Button>
+            </CardContent>
+        </Card>
+    )
 }
