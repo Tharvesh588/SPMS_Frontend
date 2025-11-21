@@ -1,12 +1,13 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { ArrowRight, BookOpen } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
 import { getUnassignedProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
+import { ProblemStatementList } from '@/components/problem-statement-list';
 
 export default async function Home() {
     let problemStatements: ProblemStatement[] = [];
@@ -29,8 +30,8 @@ export default async function Home() {
                 </nav>
             </header>
             <main className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-32">
-                    <div className="container px-4 md:px-6 flex items-center justify-center">
+                <section className="w-full py-12 md:py-24 lg:py-32 flex items-center justify-center">
+                    <div className="container px-4 md:px-6">
                         <div className="flex flex-col items-center space-y-4 text-center">
                             <div className="space-y-2">
                                 <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none">
@@ -59,11 +60,7 @@ export default async function Home() {
                                 <p>Failed to load problem statements. Please try again later.</p>
                              </div>
                         ) : (
-                            <div className="grid w-full grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                                {problemStatements.map((ps) => (
-                                    <ProblemStatementCard key={ps._id} ps={ps} />
-                                ))}
-                            </div>
+                           <ProblemStatementList statements={problemStatements} />
                         )}
                     </div>
                 </section>
@@ -80,28 +77,5 @@ export default async function Home() {
                 </nav>
             </footer>
         </div>
-    );
-}
-
-function ProblemStatementCard({ ps }: { ps: ProblemStatement }) {
-    return (
-        <Card className="flex flex-col h-full bg-card">
-            <CardHeader>
-                 <div className="flex items-start justify-between">
-                    <CardTitle className="font-headline text-xl line-clamp-2">{ps.title}</CardTitle>
-                    <Badge variant="secondary">Available</Badge>
-                </div>
-            </CardHeader>
-            <CardContent className="flex-grow">
-                <p className="text-sm text-muted-foreground line-clamp-4">
-                    {ps.description}
-                </p>
-            </CardContent>
-            <CardFooter>
-                 <Button asChild className="w-full">
-                    <Link href="/login">View &amp; Choose Project <ArrowRight className="ml-2 w-4 h-4" /></Link>
-                 </Button>
-            </CardFooter>
-        </Card>
     );
 }
