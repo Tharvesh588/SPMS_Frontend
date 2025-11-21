@@ -1,15 +1,16 @@
 'use client';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
+import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRight } from 'lucide-react';
+import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, ArrowRight, Loader2, FileText } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import Link from 'next/link';
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -41,99 +42,125 @@ const AdminSidebar = () => (
 );
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState({
+    faculties: 0,
+    batches: 0,
+    problemStatements: 0,
+  });
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    async function fetchData() {
+      try {
+        setIsLoading(true);
+        const [faculties, batches, problemStatements] = await Promise.all([
+          getFaculties(),
+          getBatches(),
+          getProblemStatements(),
+        ]);
+        setStats({
+          faculties: faculties.length,
+          batches: batches.length,
+          problemStatements: problemStatements.length,
+        });
+      } catch (error) {
+        console.error("Failed to fetch dashboard stats:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+    fetchData();
+  }, []);
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex flex-col gap-6">
-            <Card className="w-full">
-                <CardHeader>
-                    <CardTitle>Welcome, Admin</CardTitle>
-                    <CardDescription>Manage the entire project allocation system from here.</CardDescription>
-                </CardHeader>
-            </Card>
-
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-                <Dialog>
-                    <DashboardActionCard 
-                        title="Create Faculty Account"
-                        description="Onboard new faculty members by creating their accounts."
-                        icon={<UserPlus className="h-8 w-8 text-accent" />}
-                        actionText="Create Account"
-                        asTrigger
-                    />
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create Faculty Account</DialogTitle>
-                        </DialogHeader>
-                        <CreateFacultyForm />
-                    </DialogContent>
-                </Dialog>
-                
-                <Dialog>
-                    <DashboardActionCard 
-                        title="Create Batch Account"
-                        description="Create accounts for new student batches."
-                        icon={<Users className="h-8 w-8 text-accent" />}
-                        actionText="Create Account"
-                        asTrigger
-                    />
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Create Batch Account</DialogTitle>
-                        </DialogHeader>
-                        <CreateBatchForm />
-                    </DialogContent>
-                </Dialog>
-
-                <Dialog>
-                    <DashboardActionCard 
-                        title="Upload Problem Statement"
-                        description="Add a new problem statement on behalf of any faculty."
-                        icon={<Upload className="h-8 w-8 text-accent" />}
-                        actionText="Upload Now"
-                        asTrigger
-                    />
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Upload Problem Statement</DialogTitle>
-                        </DialogHeader>
-                        <UploadProblemStatementForm />
-                    </DialogContent>
-                </Dialog>
+              <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="Total Problem Statements" value={stats.problemStatements} icon={<FileText className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
             </div>
+
+            <Card>
+                <CardHeader>
+                    <CardTitle>Quick Actions</CardTitle>
+                    <CardDescription>Manage the system from here.</CardDescription>
+                </CardHeader>
+                <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                    <Dialog>
+                        <DialogTrigger asChild>
+                             <Button className="w-full justify-start p-6 text-left h-auto">
+                                <UserPlus className="mr-4 h-6 w-6" />
+                                <div>
+                                    <p className="font-semibold">Create Faculty Account</p>
+                                    <p className="font-normal text-sm text-primary-foreground/80">Onboard new faculty members.</p>
+                                </div>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Faculty Account</DialogTitle>
+                            </DialogHeader>
+                            <CreateFacultyForm />
+                        </DialogContent>
+                    </Dialog>
+                    
+                    <Dialog>
+                         <DialogTrigger asChild>
+                             <Button className="w-full justify-start p-6 text-left h-auto">
+                                <Users className="mr-4 h-6 w-6" />
+                                <div>
+                                    <p className="font-semibold">Create Batch Account</p>
+                                    <p className="font-normal text-sm text-primary-foreground/80">Create accounts for student batches.</p>
+                                </div>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Create Batch Account</DialogTitle>
+                            </DialogHeader>
+                            <CreateBatchForm />
+                        </DialogContent>
+                    </Dialog>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                             <Button className="w-full justify-start p-6 text-left h-auto">
+                                <Upload className="mr-4 h-6 w-6" />
+                                <div>
+                                    <p className="font-semibold">Upload Problem Statement</p>
+                                    <p className="font-normal text-sm text-primary-foreground/80">Add a new project idea.</p>
+                                </div>
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            <DialogHeader>
+                                <DialogTitle>Upload Problem Statement</DialogTitle>
+                            </DialogHeader>
+                            <UploadProblemStatementForm />
+                        </DialogContent>
+                    </Dialog>
+                </CardContent>
+            </Card>
         </div>
     </DashboardLayout>
   );
 }
 
-function DashboardActionCard({ title, description, icon, actionText, asTrigger = false }: { title: string, description: string, icon: React.ReactNode, actionText: string, asTrigger?: boolean }) {
-
-    const ActionButton = () => (
-         <Button className="w-full group">
-            {actionText}
-            <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
-        </Button>
-    )
-
-    return (
-        <Card className="flex flex-col">
-            <CardHeader className="flex-grow">
-                <div className="mb-4 flex justify-center items-center h-16 w-16 rounded-full bg-accent/10">
-                    {icon}
-                </div>
-                <CardTitle>{title}</CardTitle>
-                <CardDescription>{description}</CardDescription>
-            </CardHeader>
-            <CardContent>
-                {asTrigger ? (
-                    <DialogTrigger asChild>
-                       <ActionButton />
-                    </DialogTrigger>
-                ) : (
-                    <Link href="#">
-                        <ActionButton />
-                    </Link>
-                )}
-            </CardContent>
-        </Card>
-    )
+function StatCard({ title, value, icon, isLoading }: { title: string, value: number, icon: React.ReactNode, isLoading: boolean }) {
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+        <CardTitle className="text-sm font-medium">{title}</CardTitle>
+        {icon}
+      </CardHeader>
+      <CardContent>
+        {isLoading ? (
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        ) : (
+          <div className="text-2xl font-bold">{value}</div>
+        )}
+      </CardContent>
+    </Card>
+  )
 }

@@ -1,5 +1,4 @@
-
-import { Faculty } from "@/types";
+import { Faculty, Batch, ProblemStatement } from "@/types";
 
 const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
 
@@ -70,4 +69,24 @@ export async function createFaculty(facultyData: CreateFacultyData): Promise<any
         method: 'POST',
         body: JSON.stringify(facultyData)
     });
+}
+
+// Batches
+export async function getBatches(): Promise<Batch[]> {
+  const response = await fetcher<{
+    success: boolean;
+    count: number;
+    batches: Batch[];
+  }>("/admin/batches");
+  return response.batches;
+}
+
+// Problem Statements
+export async function getProblemStatements(): Promise<ProblemStatement[]> {
+  const response = await fetcher<{
+    success: boolean;
+    count: number;
+    problemStatements: ProblemStatement[];
+  }>("/admin/problem-statements");
+  return response.problemStatements;
 }

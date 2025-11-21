@@ -10,9 +10,21 @@ export type Faculty = {
 
 export type Batch = {
     _id: string;
-    name: string;
+    batchName: string; // Changed from name to batchName to match backend
     username: string;
     project?: string; // or a more detailed project type
     createdAt: string;
     updatedAt: string;
 }
+
+export type ProblemStatement = {
+  _id: string;
+  title: string;
+  description: string;
+  gDriveLink: string;
+  facultyId: string;
+  uploadedBy: 'admin' | 'faculty';
+  isAvailable: boolean;
+  createdAt: string;
+  updatedAt: string;
+};
