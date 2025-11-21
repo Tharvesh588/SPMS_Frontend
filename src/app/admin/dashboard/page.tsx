@@ -41,61 +41,63 @@ const AdminSidebar = () => (
 export default function AdminDashboard() {
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-            <Card className="col-span-1 lg:col-span-3">
+        <div className="flex flex-col gap-6">
+            <Card>
                 <CardHeader>
                     <CardTitle>Welcome, Admin</CardTitle>
                     <CardDescription>Manage the entire project allocation system from here.</CardDescription>
                 </CardHeader>
             </Card>
 
-            <Dialog>
-                <DashboardActionCard 
-                    title="Create Faculty Account"
-                    description="Onboard new faculty members by creating their accounts."
-                    icon={<UserPlus className="h-8 w-8 text-accent" />}
-                    actionText="Create Account"
-                    asTrigger
-                />
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create Faculty Account</DialogTitle>
-                    </DialogHeader>
-                    <CreateFacultyForm />
-                </DialogContent>
-            </Dialog>
-            
-            <Dialog>
-                 <DashboardActionCard 
-                    title="Create Batch Account"
-                    description="Create accounts for new student batches."
-                    icon={<Users className="h-8 w-8 text-accent" />}
-                    actionText="Create Account"
-                    asTrigger
-                />
-                <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create Batch Account</DialogTitle>
-                    </DialogHeader>
-                    <CreateBatchForm />
-                </DialogContent>
-            </Dialog>
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <Dialog>
+                    <DashboardActionCard 
+                        title="Create Faculty Account"
+                        description="Onboard new faculty members by creating their accounts."
+                        icon={<UserPlus className="h-8 w-8 text-accent" />}
+                        actionText="Create Account"
+                        asTrigger
+                    />
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create Faculty Account</DialogTitle>
+                        </DialogHeader>
+                        <CreateFacultyForm />
+                    </DialogContent>
+                </Dialog>
+                
+                <Dialog>
+                    <DashboardActionCard 
+                        title="Create Batch Account"
+                        description="Create accounts for new student batches."
+                        icon={<Users className="h-8 w-8 text-accent" />}
+                        actionText="Create Account"
+                        asTrigger
+                    />
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Create Batch Account</DialogTitle>
+                        </DialogHeader>
+                        <CreateBatchForm />
+                    </DialogContent>
+                </Dialog>
 
-            <Dialog>
-                <DashboardActionCard 
-                    title="Upload Problem Statement"
-                    description="Add a new problem statement on behalf of any faculty."
-                    icon={<Upload className="h-8 w-8 text-accent" />}
-                    actionText="Upload Now"
-                    asTrigger
-                />
-                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Upload Problem Statement</DialogTitle>
-                    </DialogHeader>
-                    <UploadProblemStatementForm />
-                </DialogContent>
-            </Dialog>
+                <Dialog>
+                    <DashboardActionCard 
+                        title="Upload Problem Statement"
+                        description="Add a new problem statement on behalf of any faculty."
+                        icon={<Upload className="h-8 w-8 text-accent" />}
+                        actionText="Upload Now"
+                        asTrigger
+                    />
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Upload Problem Statement</DialogTitle>
+                        </DialogHeader>
+                        <UploadProblemStatementForm />
+                    </DialogContent>
+                </Dialog>
+            </div>
         </div>
     </DashboardLayout>
   );
