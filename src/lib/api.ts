@@ -35,7 +35,6 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
 
   const headers = {
     "Content-Type": "application/json",
-    // Temporarily using a placeholder token
     Authorization: token ? `Bearer ${token}` : "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY2OWE3NTM5ZGJlYjMzZTJkZDEwYjYwNiIsInJvbGUiOiJhZG1pbiIsImlhdCI6MTcyMTM5OTYxMCwiZXhwIjoxNzI5MTc1NjEwfQ.12v8Gv9sQz2p9rTOpXjY20z2Hqj_y-JpB2mB_r8n2gE",
     ...options.headers,
   };
@@ -56,17 +55,36 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
 // Fetch real faculties, fallback to mock if failure
 export async function getFaculties(): Promise<Faculty[]> {
   try {
-    // const response = await fetcher<{
-    //   success: boolean;
-    //   count: number;
-    //   faculties: Faculty[];
-    // }>("/admin/faculties");
-    // return response.faculties; // return real data
+    const response = await fetcher<{
+      success: boolean;
+      count: number;
+      faculties: Faculty[];
+    }>("/admin/faculties");
+    return response.faculties; // return real data
     
-    // Returning mock data to avoid backend dependency during development
-    return MOCK_FACULTIES;
   } catch (error) {
     console.error("Failed to fetch faculties, using mock fallback:", error);
     return MOCK_FACULTIES;
   }
+}
+
+type CreateFacultyData = {
+    name: string;
+    email: string;
+    password: string;
+    quotaLimit: number;
+};
+
+export async function createFaculty(facultyData: CreateFacultyData): Promise<any> {
+    const data = {
+        ...facultyData,
+        // The API does not require a username field, so we remove it if present.
+        // It uses email for login.
+        username: undefined, 
+    };
+
+    return await fetcher('/admin/faculties', {
+        method: 'POST',
+        body: JSON.stringify(data),
+    });
 }

@@ -16,6 +16,7 @@ import {
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
+import { createFaculty } from '@/lib/api';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Faculty name is required'),
@@ -39,18 +40,32 @@ export function CreateFacultyForm() {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
+  async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
-    console.log('Creating faculty:', values);
-    // Simulate API call
-    setTimeout(() => {
-      setIsLoading(false);
+    try {
+      await createFaculty({
+          name: values.name,
+          email: values.email,
+          password: values.password,
+          quotaLimit: values.quota,
+      });
       toast({
         title: "Faculty Account Created",
         description: `Account for ${values.name} has been successfully created.`,
       });
       form.reset();
-    }, 1500);
+      // Optionally, you can add a callback to refresh the faculty list
+    } catch (error) {
+        const err = error as Error;
+        console.error('Failed to create faculty:', error);
+        toast({
+            variant: "destructive",
+            title: "Failed to create faculty",
+            description: err.message || "An unexpected error occurred.",
+        });
+    } finally {
+        setIsLoading(false);
+    }
   }
 
   return (
