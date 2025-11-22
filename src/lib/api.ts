@@ -26,8 +26,24 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         if (options.method === 'DELETE' && (response.status === 200 || response.status === 204)) {
             return {} as T;
         }
-        const err = await response.json().catch(() => ({ message: response.statusText || 'Failed to fetch from API' }));
-        throw new Error(err.message || 'Failed to fetch from API');
+        
+        // Try to parse the error response as JSON, but handle cases where it's not.
+        const contentType = response.headers.get("content-type");
+        let errMessage = `Request failed with status: ${response.status}`;
+
+        if (contentType && contentType.indexOf("application/json") !== -1) {
+            try {
+                const err = await response.json();
+                errMessage = err.message || JSON.stringify(err);
+            } catch (e) {
+                errMessage = `Failed to parse JSON error response. Status: ${response.status} ${response.statusText}`;
+            }
+        } else {
+            // If not JSON, use the status text.
+            errMessage = response.statusText || 'Failed to fetch from API';
+        }
+        
+        throw new Error(errMessage);
     }
     
     // Handle responses that might not have a body (like DELETE)
@@ -51,7 +67,7 @@ type LoginResponse = {
     token: string;
     user: {
         id: string;
-        role: 'tadmin' | 'faculty' | 'batch';
+        role: 'admin' | 'faculty' | 'batch';
         // other user properties...
     }
 }

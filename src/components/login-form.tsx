@@ -29,7 +29,7 @@ import { login } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 
 const formSchema = z.object({
-  role: z.enum(['tadmin', 'faculty', 'batch']),
+  role: z.enum(['admin', 'faculty', 'batch']),
   identifier: z.string().min(1, 'Email or Username is required'),
   password: z.string().min(1, 'Password is required'),
 });
@@ -67,8 +67,7 @@ export default function LoginForm() {
 
     try {
       await login(credentials, values.role);
-      const dashboardRole = values.role === 'tadmin' ? 'admin' : values.role;
-      router.push(`/${dashboardRole}/dashboard`);
+      router.push(`/${values.role}/dashboard`);
     } catch (error) {
       console.error("Login failed:", error);
       toast({
@@ -99,7 +98,7 @@ export default function LoginForm() {
                         </SelectTrigger>
                       </FormControl>
                       <SelectContent>
-                        <SelectItem value="tadmin">Admin</SelectItem>
+                        <SelectItem value="admin">Admin</SelectItem>
                         <SelectItem value="faculty">Faculty</SelectItem>
                         <SelectItem value="batch">Batch</SelectItem>
                       </SelectContent>
