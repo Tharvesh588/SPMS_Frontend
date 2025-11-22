@@ -14,6 +14,7 @@ export type Batch = {
     batchName: string; // Changed from name to batchName to match backend
     username: string;
     project?: string; // or a more detailed project type
+    coordinatorId?: string; // Added to match backend expectation
     createdAt: string;
     updatedAt: string;
 }
