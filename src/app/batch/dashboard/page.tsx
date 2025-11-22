@@ -1,48 +1,144 @@
+
+'use client';
 import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileCheck, Files, LayoutDashboard, CheckCircle } from 'lucide-react';
-import { problemStatements, type ProblemStatement } from '@/lib/data';
+import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon } from 'lucide-react';
+import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement } from '@/lib/api';
+import type { ProblemStatement, Batch, Faculty } from '@/types';
+import { useEffect, useState, useCallback } from 'react';
+import { useToast } from '@/hooks/use-toast';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 
 const BatchSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton isActive title="Dashboard">
+      <SidebarMenuButton href="/batch/dashboard" isActive title="Dashboard">
         <LayoutDashboard />
+        Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
-    <SidebarMenuItem>
-      <SidebarMenuButton title="All Statements">
-        <Files />
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-    <SidebarMenuItem>
-      <SidebarMenuButton title="My Selection">
-        <FileCheck />
-      </SidebarMenuButton>
-    </SidebarMenuItem>
+    {/* Additional links can be added here if needed */}
   </SidebarMenu>
 );
 
-const projectSelected = true; // Set to false to see the other state
 
 export default function BatchDashboard() {
-  const selectedProject = problemStatements[1];
+  const [batchDetails, setBatchDetails] = useState<Batch | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const { toast } = useToast();
+
+  const fetchDetails = useCallback(async () => {
+    setIsLoading(true);
+    const batchId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    if (!batchId) {
+      toast({ variant: 'destructive', title: 'Authentication Error', description: 'Could not find batch ID.' });
+      setIsLoading(false);
+      return;
+    }
+    try {
+      const { batch } = await getBatchDetails(batchId);
+      setBatchDetails(batch);
+    } catch (error) {
+      console.error("Failed to fetch batch details:", error);
+      toast({ variant: 'destructive', title: 'Failed to load data', description: (error as Error).message });
+    } finally {
+      setIsLoading(false);
+    }
+  }, [toast]);
+  
+  useEffect(() => {
+    fetchDetails();
+  }, [fetchDetails]);
+
+  const handleProjectSelection = async () => {
+    // This function is called after a project is selected from the dialog
+    // It simply refetches the batch details to update the UI
+    await fetchDetails();
+  };
+
+  if (isLoading) {
+    return (
+      <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
+        <div className="flex justify-center items-center h-64">
+          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <span className="ml-4 text-muted-foreground">Loading Your Dashboard...</span>
+        </div>
+      </DashboardLayout>
+    );
+  }
 
   return (
     <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
-      {projectSelected ? (
-        <SelectedProjectView project={selectedProject} />
+      {batchDetails?.isLocked ? (
+        <SelectedProjectView batch={batchDetails} />
       ) : (
-        <AvailableProjectsView />
+        <AvailableProjectsView onProjectSelected={handleProjectSelection} />
       )}
     </DashboardLayout>
   );
 }
 
-function AvailableProjectsView() {
+function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () => void }) {
+    const [statements, setStatements] = useState<ProblemStatement[]>([]);
+    const [isLoading, setIsLoading] = useState(true);
+    const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
+    const [isConfirming, setIsConfirming] = useState(false);
+    const { toast } = useToast();
+
+    useEffect(() => {
+      async function fetchStatements() {
+        try {
+          setIsLoading(true);
+          const data = await getAvailableProblemStatementsForBatch();
+          setStatements(data);
+        } catch (error) {
+          console.error("Failed to fetch problem statements:", error);
+          toast({ variant: "destructive", title: "Failed to load projects", description: (error as Error).message });
+        } finally {
+          setIsLoading(false);
+        }
+      }
+      fetchStatements();
+    }, [toast]);
+
+    const handleSelectClick = (ps: ProblemStatement) => {
+        setSelectedStatement(ps);
+    }
+
+    const handleConfirmSelection = async () => {
+        const batchId = localStorage.getItem('userId');
+        if (!selectedStatement || !batchId) {
+            toast({ variant: 'destructive', title: 'Error', description: 'No statement or batch ID found.' });
+            return;
+        }
+
+        setIsConfirming(true);
+        try {
+            await chooseProblemStatement(batchId, selectedStatement._id);
+            toast({ title: 'Project Selected!', description: `You have successfully chosen "${selectedStatement.title}".` });
+            setSelectedStatement(null);
+            onProjectSelected(); // Callback to refresh dashboard
+        } catch (error) {
+            console.error("Failed to select project:", error);
+            toast({ variant: 'destructive', title: 'Selection Failed', description: (error as Error).message });
+        } finally {
+            setIsConfirming(false);
+        }
+    }
+
+
+    if (isLoading) {
+        return (
+            <div className="flex justify-center items-center h-64">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+                <span className="ml-4 text-muted-foreground">Loading Available Projects...</span>
+            </div>
+        )
+    }
+
     return (
         <>
             <div className="flex items-center justify-between">
@@ -50,15 +146,52 @@ function AvailableProjectsView() {
                 <p className="text-muted-foreground">You can select 1 project.</p>
             </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-4">
-            {problemStatements.map((ps) => (
-              <ProblemStatementCard key={ps.id} ps={ps} />
+            {statements.map((ps) => (
+              <ProblemStatementCard key={ps._id} ps={ps} onSelect={handleSelectClick} />
             ))}
           </div>
+
+          <Dialog open={!!selectedStatement} onOpenChange={(isOpen) => !isOpen && setSelectedStatement(null)}>
+              <DialogContent>
+                  <DialogHeader>
+                      <DialogTitle className="text-2xl font-headline">{selectedStatement?.title}</DialogTitle>
+                      <DialogDescription>Review the details below. This action is final.</DialogDescription>
+                  </DialogHeader>
+                  <div className="py-4 space-y-4">
+                      <p className="text-sm text-muted-foreground">{selectedStatement?.description}</p>
+                      <Button asChild variant="outline">
+                        <a href={selectedStatement?.gDriveLink} target="_blank" rel="noopener noreferrer">
+                            <LinkIcon className="mr-2 h-4 w-4" />
+                            View Google Drive
+                        </a>
+                      </Button>
+                  </div>
+                  <DialogFooter>
+                      <Button variant="ghost" onClick={() => setSelectedStatement(null)} disabled={isConfirming}>Cancel</Button>
+                      <Button onClick={handleConfirmSelection} disabled={isConfirming}>
+                          {isConfirming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+                          Confirm Selection
+                      </Button>
+                  </DialogFooter>
+              </DialogContent>
+          </Dialog>
         </>
     )
 }
 
-function SelectedProjectView({ project }: { project: ProblemStatement }) {
+function SelectedProjectView({ batch }: { batch: Batch }) {
+    const project = batch.projectId as ProblemStatement;
+    const coordinator = batch.coordinatorId as Faculty;
+    
+    if (!project || !coordinator) {
+        return (
+             <div className="text-center py-10">
+                <h2 className="text-2xl font-bold">Loading Project Details...</h2>
+                <p className="text-muted-foreground">Please wait a moment.</p>
+            </div>
+        )
+    }
+
   return (
     <div>
         <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-8" role="alert">
@@ -76,17 +209,13 @@ function SelectedProjectView({ project }: { project: ProblemStatement }) {
             <Card>
                 <CardHeader>
                     <CardTitle className="text-2xl">{project.title}</CardTitle>
-                    <CardDescription>Domain: {project.domain}</CardDescription>
                 </CardHeader>
                 <CardContent>
                     <p className="text-muted-foreground mb-6">{project.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                        {project.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-                    </div>
                 </CardContent>
                  <CardFooter>
                     <Button asChild variant="link">
-                        <a href="#" target="_blank" rel="noopener noreferrer">View Google Drive Link</a>
+                        <a href={project.gDriveLink} target="_blank" rel="noopener noreferrer">View Google Drive Link</a>
                     </Button>
                 </CardFooter>
             </Card>
@@ -97,9 +226,8 @@ function SelectedProjectView({ project }: { project: ProblemStatement }) {
                     <CardTitle>Project Coordinator</CardTitle>
                 </CardHeader>
                 <CardContent>
-                    <div className="flex items-center space-x-4">
-                        <div className="text-3xl font-bold">{project.faculty}</div>
-                    </div>
+                    <p className="text-lg font-semibold">{coordinator.name}</p>
+                    <p className="text-sm text-muted-foreground">{coordinator.email}</p>
                      <p className="text-sm text-muted-foreground mt-4">Contact your coordinator for further guidance.</p>
                 </CardContent>
             </Card>
@@ -109,24 +237,24 @@ function SelectedProjectView({ project }: { project: ProblemStatement }) {
   )
 }
 
-function ProblemStatementCard({ ps }: { ps: ProblemStatement }) {
+function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect: (ps: ProblemStatement) => void }) {
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300 border-2 border-transparent hover:border-primary">
       <CardHeader>
         <CardTitle className="line-clamp-2">{ps.title}</CardTitle>
-        <CardDescription>By {ps.faculty} | Domain: {ps.domain}</CardDescription>
+         <CardDescription>
+            Faculty: {typeof ps.facultyId === 'object' ? ps.facultyId.name : 'N/A'}
+        </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-3">
           {ps.description}
         </p>
-        <div className="flex flex-wrap gap-2 mt-4">
-            {ps.tags.map(tag => <Badge key={tag} variant="secondary">{tag}</Badge>)}
-        </div>
       </CardContent>
       <CardFooter>
-        <Button className="w-full" disabled={!ps.isAvailable}>
-          {ps.isAvailable ? 'View & Select' : 'Unavailable'}
+        <Button className="w-full" onClick={() => onSelect(ps)}>
+          View & Select
+          <ArrowRight className="ml-2 w-4 h-4" />
         </Button>
       </CardFooter>
     </Card>

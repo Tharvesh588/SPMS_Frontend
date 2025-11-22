@@ -9,12 +9,25 @@ export type Faculty = {
   updatedAt: string;
 };
 
+export type Student = {
+    nameInitial: string;
+    rollNumber: string;
+    dept: string;
+    section: string;
+    year: number;
+    mailId: string;
+    phone: string;
+}
+
 export type Batch = {
     _id: string;
-    batchName: string; // Changed from name to batchName to match backend
+    batchName: string;
     username: string;
-    project?: string; // or a more detailed project type
-    coordinatorId?: string; // Added to match backend expectation
+    project?: string; 
+    coordinatorId?: Faculty | string;
+    projectId?: ProblemStatement | string;
+    students: Student[];
+    isLocked: boolean;
     createdAt: string;
     updatedAt: string;
 }

@@ -47,13 +47,24 @@ type LoginCredentials = {
   password?: string;
 };
 
-export async function login(credentials: LoginCredentials, role: string): Promise<{ token: string }> {
-    const response = await fetcher<{ token: string, user: any }>(`/auth/login?role=${role}`, {
+type LoginResponse = {
+    token: string;
+    user: {
+        id: string;
+        role: 'tadmin' | 'faculty' | 'batch';
+        // other user properties...
+    }
+}
+
+export async function login(credentials: LoginCredentials, role: string): Promise<LoginResponse> {
+    const response = await fetcher<LoginResponse>(`/auth/login?role=${role}`, {
         method: 'POST',
         body: JSON.stringify(credentials),
     });
     if (response.token && typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
+        localStorage.setItem('userId', response.user.id);
+        localStorage.setItem('userRole', response.user.role);
     }
     return response;
 }
@@ -229,5 +240,23 @@ export async function createProblemStatementAsFaculty(psData: FacultyCreateProbl
 export async function deleteProblemStatementAsFaculty(id: string): Promise<void> {
     await fetcher(`/faculty/problem-statements/${id}`, {
         method: 'DELETE',
+    });
+}
+
+// Batch Endpoints
+
+export async function getAvailableProblemStatementsForBatch(): Promise<ProblemStatement[]> {
+    const response = await fetcher<{success: boolean, ps: ProblemStatement[]}>('/batch/problem-statements');
+    return response.ps;
+}
+
+export async function getBatchDetails(batchId: string): Promise<{success: boolean, batch: Batch}> {
+    return fetcher(`/batch/${batchId}/details`);
+}
+
+export async function chooseProblemStatement(batchId: string, psId: string): Promise<{success: boolean, message: string, batch: Batch}> {
+    return fetcher(`/batch/${batchId}/choose-ps`, {
+        method: 'PUT',
+        body: JSON.stringify({ psId })
     });
 }
