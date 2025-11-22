@@ -5,12 +5,13 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon } from 'lucide-react';
-import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement } from '@/lib/api';
+import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon, Download } from 'lucide-react';
+import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport } from '@/lib/api';
 import type { ProblemStatement, Batch, Faculty } from '@/types';
 import { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
+import { SaveStudentsForm } from '@/components/batch/save-students-form';
 
 const BatchSidebar = () => (
   <SidebarMenu>
@@ -52,6 +53,11 @@ export default function BatchDashboard() {
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
+  
+  const handleStudentsSaved = () => {
+    fetchDetails();
+    toast({ title: 'Student Details Saved', description: 'You can now select a project.' });
+  }
 
   const handleProjectSelection = async () => {
     // This function is called after a project is selected from the dialog
@@ -69,6 +75,23 @@ export default function BatchDashboard() {
       </DashboardLayout>
     );
   }
+
+  if (!batchDetails) {
+    return (
+       <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
+         <div className="text-center">Could not load batch details.</div>
+       </DashboardLayout>
+    )
+  }
+
+  if (batchDetails.students.length === 0) {
+    return (
+       <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
+          <SaveStudentsForm onStudentsSaved={handleStudentsSaved} />
+       </DashboardLayout>
+    )
+  }
+
 
   return (
     <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
@@ -182,6 +205,44 @@ function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () =>
 function SelectedProjectView({ batch }: { batch: Batch }) {
     const project = batch.projectId as ProblemStatement;
     const coordinator = batch.coordinatorId as Faculty;
+    const { toast } = useToast();
+    const [isDownloading, setIsDownloading] = useState(false);
+
+    const handleDownloadReport = async () => {
+        const batchId = localStorage.getItem('userId');
+        if (!batchId) return;
+
+        setIsDownloading(true);
+        try {
+            const { report } = await generateBatchReport(batchId);
+            
+            const reportContent = `
+Batch Name: ${report.batchName}
+Department: ${report.department}
+Project: ${report.project}
+
+Students:
+${report.students.map((s: any, i: number) => `  ${i+1}. ${s.nameInitial} (${s.rollNumber})`).join('\n')}
+            `;
+
+            const blob = new Blob([reportContent.trim()], { type: 'text/plain' });
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `report-${report.batchName.replace(/\s+/g, '-')}.txt`;
+            document.body.appendChild(a);
+            a.click();
+            a.remove();
+            window.URL.revokeObjectURL(url);
+
+            toast({ title: 'Report Downloaded', description: 'The report has been saved to your device.' });
+        } catch (error) {
+            console.error("Failed to generate report:", error);
+            toast({ variant: 'destructive', title: 'Download Failed', description: (error as Error).message });
+        } finally {
+            setIsDownloading(false);
+        }
+    };
     
     if (!project || !coordinator) {
         return (
@@ -203,7 +264,13 @@ function SelectedProjectView({ batch }: { batch: Batch }) {
                 </div>
             </div>
         </div>
-      <h2 className="text-3xl font-headline font-bold mb-6">My Project Details</h2>
+      <div className="flex justify-between items-center mb-6">
+        <h2 className="text-3xl font-headline font-bold">My Project Details</h2>
+        <Button onClick={handleDownloadReport} disabled={isDownloading}>
+            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+            Download Report
+        </Button>
+      </div>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
             <Card>
@@ -260,3 +327,4 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect
     </Card>
   );
 }
+

@@ -1,5 +1,5 @@
 
-import { Faculty, Batch, ProblemStatement } from "@/types";
+import { Faculty, Batch, ProblemStatement, Student } from "@/types";
 
 const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
 
@@ -275,4 +275,15 @@ export async function chooseProblemStatement(batchId: string, psId: string): Pro
         method: 'PUT',
         body: JSON.stringify({ psId })
     });
+}
+
+export async function saveStudentsForBatch(batchId: string, students: Student[]): Promise<{success: boolean, batch: Batch}> {
+    return fetcher(`/batch/${batchId}/students`, {
+        method: 'POST',
+        body: JSON.stringify({ students })
+    });
+}
+
+export async function generateBatchReport(batchId: string): Promise<{success: boolean, report: any}> {
+    return fetcher(`/batch/${batchId}/report`);
 }
