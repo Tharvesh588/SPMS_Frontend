@@ -14,7 +14,7 @@ export type Student = {
     rollNumber: string;
     dept: string;
     section: string;
-    year: number;
+    year: string;
     mailId: string;
     phone: string;
 }

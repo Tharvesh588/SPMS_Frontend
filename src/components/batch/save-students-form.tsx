@@ -12,14 +12,14 @@ import { useState } from 'react';
 import { Loader2, PlusCircle, Trash2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { saveStudentsForBatch } from '@/lib/api';
-import type { Student } from '@/types';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const studentSchema = z.object({
   nameInitial: z.string().min(1, 'Name with initial is required'),
   rollNumber: z.string().min(1, 'Roll number is required'),
   dept: z.string().min(1, 'Department is required'),
   section: z.string().min(1, 'Section is required'),
-  year: z.coerce.number().min(2000, 'Invalid year'),
+  year: z.string().min(1, 'Year is required'),
   mailId: z.string().email('Invalid email address'),
   phone: z.string().min(10, 'Must be a valid phone number'),
 });
@@ -39,7 +39,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      students: [{ nameInitial: '', rollNumber: '', dept: '', section: '', year: new Date().getFullYear(), mailId: '', phone: '' }],
+      students: [{ nameInitial: '', rollNumber: '', dept: '', section: '', year: 'IV', mailId: '', phone: '' }],
     },
   });
 
@@ -105,9 +105,29 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
                      <FormField control={form.control} name={`students.${index}.section`} render={({ field }) => (
                         <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g., A" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
-                     <FormField control={form.control} name={`students.${index}.year`} render={({ field }) => (
-                        <FormItem><FormLabel>Year</FormLabel><FormControl><Input type="number" placeholder="e.g., 2024" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
+                     <FormField
+                        control={form.control}
+                        name={`students.${index}.year`}
+                        render={({ field }) => (
+                            <FormItem>
+                            <FormLabel>Year</FormLabel>
+                            <Select onValueChange={field.onChange} defaultValue={field.value}>
+                                <FormControl>
+                                <SelectTrigger>
+                                    <SelectValue placeholder="Select year" />
+                                </SelectTrigger>
+                                </FormControl>
+                                <SelectContent>
+                                <SelectItem value="I">I</SelectItem>
+                                <SelectItem value="II">II</SelectItem>
+                                <SelectItem value="III">III</SelectItem>
+                                <SelectItem value="IV">IV</SelectItem>
+                                </SelectContent>
+                            </Select>
+                            <FormMessage />
+                            </FormItem>
+                        )}
+                        />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField control={form.control} name={`students.${index}.mailId`} render={({ field }) => (
@@ -130,7 +150,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
              )}
 
             {fields.length < 7 && (
-              <Button type="button" variant="outline" onClick={() => append({ nameInitial: '', rollNumber: '', dept: '', section: '', year: new Date().getFullYear(), mailId: '', phone: '' })}>
+              <Button type="button" variant="outline" onClick={() => append({ nameInitial: '', rollNumber: '', dept: '', section: '', year: 'IV', mailId: '', phone: '' })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Another Member
               </Button>
             )}
@@ -146,4 +166,3 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
     </Card>
   );
 }
-
