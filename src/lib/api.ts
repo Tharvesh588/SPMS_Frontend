@@ -58,7 +58,7 @@ export async function login(credentials: LoginCredentials, role: string): Promis
     return response;
 }
 
-// Faculty
+// Admin - Faculty
 export async function getFaculties(): Promise<Faculty[]> {
   const response = await fetcher<{
     success: boolean;
@@ -101,7 +101,7 @@ export async function deleteFaculty(id: string): Promise<void> {
 }
 
 
-// Batches
+// Admin - Batches
 export async function getBatches(): Promise<Batch[]> {
   const response = await fetcher<{
     success: boolean;
@@ -144,7 +144,7 @@ export async function deleteBatch(id: string): Promise<void> {
 }
 
 
-// Problem Statements
+// Problem Statements (Public / Admin)
 export async function getUnassignedProblemStatements(): Promise<ProblemStatement[]> {
   const response = await fetcher<{
     success: boolean;
@@ -164,31 +164,70 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
   return response.problemStatements;
 }
 
-type CreateProblemStatementData = {
+type AdminCreateProblemStatementData = {
     title: string;
     description: string;
     gDriveLink: string;
     facultyId: string;
 };
 
-export async function createProblemStatement(psData: CreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
+export async function createProblemStatement(psData: AdminCreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
     return fetcher('/admin/problem-statements', {
         method: 'POST',
         body: JSON.stringify(psData)
     });
 }
 
-type UpdateProblemStatementData = Partial<CreateProblemStatementData> & { isAssigned?: boolean };
+export async function deleteProblemStatement(id: string): Promise<void> {
+    await fetcher(`/admin/problem-statements/${id}`, {
+        method: 'DELETE',
+    });
+}
 
-export async function updateProblemStatement(id: string, psData: UpdateProblemStatementData): Promise<{success: boolean, problemStatement: ProblemStatement}> {
-    return fetcher(`/admin/problem-statements/${id}`, {
-        method: 'PUT',
+
+// Faculty Endpoints
+export type FacultyDashboardData = {
+    facultyDetails: {
+        name: string;
+        email: string;
+        quotaLimit: number;
+        quotaUsed: number;
+    };
+    totalProblemStatements: number;
+    assignedBatches: {
+        _id: string;
+        batchName: string;
+        projectId: {
+            _id: string;
+            title: string;
+        } | null;
+    }[];
+};
+
+export async function getFacultyDashboard(): Promise<{success: boolean, dashboard: FacultyDashboardData}> {
+    return fetcher('/faculty/dashboard');
+}
+
+export async function getMyProblemStatements(): Promise<ProblemStatement[]> {
+    const response = await fetcher<{success: boolean, list: ProblemStatement[]}>('/faculty/problem-statements');
+    return response.list;
+}
+
+type FacultyCreateProblemStatementData = {
+    title: string;
+    description: string;
+    gDriveLink: string;
+};
+
+export async function createProblemStatementAsFaculty(psData: FacultyCreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
+    return fetcher('/faculty/problem-statements', {
+        method: 'POST',
         body: JSON.stringify(psData)
     });
 }
 
-export async function deleteProblemStatement(id: string): Promise<void> {
-    await fetcher(`/admin/problem-statements/${id}`, {
+export async function deleteProblemStatementAsFaculty(id: string): Promise<void> {
+    await fetcher(`/faculty/problem-statements/${id}`, {
         method: 'DELETE',
     });
 }

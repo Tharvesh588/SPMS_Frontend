@@ -25,41 +25,55 @@ import {
 import { useEffect, useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { createProblemStatement, getFaculties } from '@/lib/api';
+import { createProblemStatement, getFaculties, createProblemStatementAsFaculty } from '@/lib/api';
 import type { ProblemStatement, Faculty } from '@/types';
 
-const formSchema = z.object({
+const formSchemaAsAdmin = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   gDriveLink: z.string().url('Must be a valid Google Drive link'),
   facultyId: z.string().min(1, 'You must select a faculty'),
 });
 
+const formSchemaAsFaculty = z.object({
+  title: z.string().min(1, 'Title is required'),
+  description: z.string().min(10, 'Description must be at least 10 characters'),
+  gDriveLink: z.string().url('Must be a valid Google Drive link'),
+});
+
+
 type UploadProblemStatementFormProps = {
     onStatementCreated?: (newStatement: ProblemStatement) => void;
+    // If running as faculty, we don't need faculty selection.
+    asRole?: 'admin' | 'faculty';
 };
 
 
-export function UploadProblemStatementForm({ onStatementCreated }: UploadProblemStatementFormProps) {
+export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin' }: UploadProblemStatementFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [faculties, setFaculties] = useState<Faculty[]>([]);
   const { toast } = useToast();
 
+  const isFacultyRole = asRole === 'faculty';
+  const formSchema = isFacultyRole ? formSchemaAsFaculty : formSchemaAsAdmin;
+
   useEffect(() => {
     async function fetchFaculties() {
-        try {
-            const data = await getFaculties();
-            setFaculties(data);
-        } catch (error) {
-            toast({
-                variant: 'destructive',
-                title: 'Failed to load faculties',
-                description: 'Could not fetch the list of faculties for selection.',
-            });
+        if (!isFacultyRole) { // Only fetch faculties if we're in admin role
+            try {
+                const data = await getFaculties();
+                setFaculties(data);
+            } catch (error) {
+                toast({
+                    variant: 'destructive',
+                    title: 'Failed to load faculties',
+                    description: 'Could not fetch the list of faculties for selection.',
+                });
+            }
         }
     }
     fetchFaculties();
-  }, [toast]);
+  }, [toast, isFacultyRole]);
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -67,25 +81,37 @@ export function UploadProblemStatementForm({ onStatementCreated }: UploadProblem
       title: '',
       description: '',
       gDriveLink: '',
-      facultyId: '',
+      ...(isFacultyRole ? {} : { facultyId: '' }),
     },
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        const { ps } = await createProblemStatement(values);
+        let newPs: ProblemStatement;
+        if (isFacultyRole) {
+            const result = await createProblemStatementAsFaculty(values);
+            newPs = result.ps;
+        } else {
+             const result = await createProblemStatement(values as z.infer<typeof formSchemaAsAdmin>);
+             newPs = result.ps;
+        }
+
         toast({
             title: "Problem Statement Uploaded",
             description: `"${values.title}" has been successfully uploaded.`,
         });
         form.reset();
-        if(onStatementCreated) {
-            // The API returns the created PS, but it might not be populated with faculty details.
-            // We find the faculty from our list to provide a fully populated object.
-            const faculty = faculties.find(f => f._id === ps.facultyId);
-            const populatedPs = { ...ps, facultyId: faculty || ps.facultyId };
-            onStatementCreated(populatedPs);
+
+        if (onStatementCreated) {
+            let populatedPs = newPs;
+            if (!isFacultyRole && newPs.facultyId) {
+                const faculty = faculties.find(f => f._id === (newPs.facultyId as any)._id);
+                if (faculty) {
+                    populatedPs = { ...newPs, facultyId: faculty };
+                }
+            }
+             onStatementCreated(populatedPs);
         }
     } catch(error) {
         toast({
@@ -140,6 +166,7 @@ export function UploadProblemStatementForm({ onStatementCreated }: UploadProblem
             </FormItem>
           )}
         />
+        {!isFacultyRole && (
         <FormField
           control={form.control}
           name="facultyId"
@@ -162,6 +189,7 @@ export function UploadProblemStatementForm({ onStatementCreated }: UploadProblem
             </FormItem>
           )}
         />
+        )}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
           Upload Problem Statement

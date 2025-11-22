@@ -20,8 +20,8 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { getProblemStatements, deleteProblemStatement } from '@/lib/api';
-import type { ProblemStatement, Faculty } from '@/types';
+import { getMyProblemStatements, deleteProblemStatementAsFaculty } from '@/lib/api';
+import type { ProblemStatement } from '@/types';
 
 const FacultySidebar = () => (
   <SidebarMenu>
@@ -46,21 +46,11 @@ export default function ManageFacultyProblemStatementsPage() {
   const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
   const { toast } = useToast();
 
-  // This would be replaced with actual logged-in faculty data
-  const loggedInFacultyId = "66a01235171e21262a562854"; 
-
   const fetchStatements = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await getProblemStatements();
-      // Filter statements for the logged-in faculty
-      const facultyStatements = data.filter(s => {
-        if(typeof s.facultyId === 'object' && s.facultyId !== null) {
-            return s.facultyId._id === loggedInFacultyId;
-        }
-        return s.facultyId === loggedInFacultyId;
-      });
-      setStatements(facultyStatements);
+      const data = await getMyProblemStatements();
+      setStatements(data);
     } catch (error) {
       console.error('Failed to fetch statements:', error);
       toast({
@@ -71,20 +61,18 @@ export default function ManageFacultyProblemStatementsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast, loggedInFacultyId]);
+  }, [toast]);
 
   useEffect(() => {
     fetchStatements();
   }, [fetchStatements]);
 
   const handleStatementCreated = (newStatement: ProblemStatement) => {
-    // We only add if it matches the current faculty
-    const facultyId = typeof newStatement.facultyId === 'object' ? newStatement.facultyId._id : newStatement.facultyId;
-    if (facultyId === loggedInFacultyId) {
-        setStatements(current => [...current, newStatement]);
-    }
+    setStatements(current => [...current, newStatement]);
     setIsCreateFormOpen(false);
     toast({ title: "Success", description: "New problem statement created." });
+    // Refetch to ensure quota is updated on dashboard if we navigate back
+    fetchStatements(); 
   }
 
   const openDeleteDialog = (statement: ProblemStatement) => {
@@ -95,7 +83,7 @@ export default function ManageFacultyProblemStatementsPage() {
   const handleDeleteConfirm = async () => {
     if (!selectedStatement) return;
     try {
-      await deleteProblemStatement(selectedStatement._id);
+      await deleteProblemStatementAsFaculty(selectedStatement._id);
       setStatements(current => current.filter(s => s._id !== selectedStatement._id));
       toast({ title: "Statement Deleted", description: `Statement "${selectedStatement.title}" has been deleted.`});
     } catch (error) {
@@ -129,8 +117,7 @@ export default function ManageFacultyProblemStatementsPage() {
                     <DialogHeader>
                         <DialogTitle>Add New Problem Statement</DialogTitle>
                     </DialogHeader>
-                    {/* The Upload form is used by Admins and Faculty. We can reuse it. */}
-                    <UploadProblemStatementForm onStatementCreated={handleStatementCreated} />
+                    <UploadProblemStatementForm onStatementCreated={handleStatementCreated} asRole="faculty" />
                   </DialogContent>
                 </Dialog>
             </CardHeader>
@@ -196,4 +183,3 @@ export default function ManageFacultyProblemStatementsPage() {
     </DashboardLayout>
   );
 }
-
