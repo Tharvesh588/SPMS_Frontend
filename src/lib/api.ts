@@ -147,7 +147,10 @@ type CreateBatchData = {
 export async function createBatch(batchData: CreateBatchData): Promise<{success: boolean, batch: Batch}> {
     const response = await fetcher<{success: boolean, batch: Batch}>("/admin/batches", {
         method: 'POST',
-        body: JSON.stringify(batchData)
+        body: JSON.stringify({
+            ...batchData,
+            apiKey: 'temp-key' 
+        })
     });
     return response;
 }
