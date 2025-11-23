@@ -82,7 +82,11 @@ export default function AdminDashboard() {
   }, [fetchData]);
 
   const handleCreation = () => {
-    fetchData();
+    // We wrap this in a timeout to allow the backend to process the change
+    // before we refetch the data.
+    setTimeout(() => {
+        fetchData();
+    }, 500);
   };
 
   return (

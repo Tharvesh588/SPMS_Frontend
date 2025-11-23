@@ -81,7 +81,7 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
       title: '',
       description: '',
       gDriveLink: '',
-      ...(isFacultyRole ? {} : { facultyId: '' }),
+      ...(!isFacultyRole && { facultyId: '' }),
     },
   });
 
@@ -93,7 +93,8 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
             const result = await createProblemStatementAsFaculty(values);
             newPs = result.ps;
         } else {
-             const result = await createProblemStatement(values as z.infer<typeof formSchemaAsAdmin>);
+             const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
+             const result = await createProblemStatement(adminValues);
              newPs = result.ps;
         }
 
@@ -105,8 +106,9 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
 
         if (onStatementCreated) {
             let populatedPs = newPs;
-            if (!isFacultyRole && values.facultyId) {
-                const faculty = faculties.find(f => f._id === values.facultyId);
+            if (!isFacultyRole) {
+                const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
+                const faculty = faculties.find(f => f._id === adminValues.facultyId);
                 if (faculty) {
                     populatedPs = { ...newPs, facultyId: faculty };
                 }
@@ -166,7 +168,7 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
             </FormItem>
           )}
         />
-        {!isFacultyRole && (
+        {!isFacultyRole && 'facultyId' in form.control.getValues() && (
         <FormField
           control={form.control}
           name="facultyId"
