@@ -10,7 +10,7 @@ import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
+import { getFaculties, getBatches, getProblemStatementsForAdmin } from '@/lib/api';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -57,10 +57,10 @@ export default function AdminDashboard() {
       const [faculties, batches, problemStatements] = await Promise.all([
         getFaculties(),
         getBatches(),
-        getProblemStatements(),
+        getProblemStatementsForAdmin(),
       ]);
       
-      const projectsSelected = batches.filter(batch => batch.project).length;
+      const projectsSelected = batches.filter(batch => batch.projectId).length;
       const assignedProblemStatements = problemStatements.filter(ps => ps.isAssigned).length;
 
       setStats({

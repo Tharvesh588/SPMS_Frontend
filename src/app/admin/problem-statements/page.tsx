@@ -20,7 +20,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
-import { getProblemStatements, deleteProblemStatement } from '@/lib/api';
+import { getProblemStatementsForAdmin, deleteProblemStatement } from '@/lib/api';
 import type { ProblemStatement, Faculty } from '@/types';
 
 
@@ -64,7 +64,7 @@ export default function ManageProblemStatementsPage() {
   const fetchStatements = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await getProblemStatements();
+      const data = await getProblemStatementsForAdmin();
       setStatements(data);
     } catch (error) {
       console.error('Failed to fetch statements:', error);
