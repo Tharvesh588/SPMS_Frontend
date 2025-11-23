@@ -8,6 +8,7 @@ import { getUnassignedProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { ProblemStatementList } from '@/components/problem-statement-list';
+import Image from 'next/image';
 
 export default async function Home() {
     let problemStatements: ProblemStatement[] = [];
@@ -31,14 +32,24 @@ export default async function Home() {
                 </nav>
             </header>
             <main className="flex-1">
-                <section className="w-full py-12 md:py-24 lg:py-32 flex items-center justify-center">
-                    <div className="container px-4 md:px-6">
+                <section className="relative w-full py-20 md:py-32 lg:py-40 flex items-center justify-center">
+                    <div className="absolute inset-0 z-0">
+                        <Image
+                            src="https://cdn.jsdelivr.net/gh/Tharvesh2026/Web-Source@main/engineering_college.webp?raw=true"
+                            alt="Background"
+                            fill
+                            className="object-cover opacity-20"
+                            priority
+                        />
+                        <div className="absolute inset-0 bg-background/50" />
+                    </div>
+                    <div className="container relative z-10 px-4 md:px-6">
                         <div className="flex flex-col items-center space-y-4 text-center">
                             <div className="space-y-2">
                                 <h1 className="text-4xl font-headline font-bold tracking-tighter sm:text-5xl md:text-6xl lg:text-7xl/none">
                                     Welcome to <span className="text-primary">ProjectVerse</span>
                                 </h1>
-                                <p className="mx-auto max-w-[700px] text-muted-foreground md:text-xl">
+                                <p className="mx-auto max-w-[700px] text-foreground/80 md:text-xl">
                                     Your central hub for managing, distributing, and selecting final year projects.
                                 </p>
                             </div>
