@@ -11,12 +11,13 @@ import { ArrowRight, Link as LinkIcon } from 'lucide-react';
 import type { ProblemStatement } from '@/types';
 
 function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement; onSelect: (ps: ProblemStatement) => void; }) {
+    const isAssigned = ps.isAssigned;
     return (
         <Card className="flex flex-col h-full bg-card">
             <CardHeader>
                  <div className="flex items-start justify-between">
                     <CardTitle className="font-headline text-xl line-clamp-2">{ps.title}</CardTitle>
-                    <Badge variant="secondary">Available</Badge>
+                    <Badge variant={isAssigned ? "destructive" : "secondary"}>{isAssigned ? 'Assigned' : 'Open'}</Badge>
                 </div>
             </CardHeader>
             <CardContent className="flex-grow">
@@ -25,8 +26,9 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement; onSelect
                 </p>
             </CardContent>
             <CardFooter>
-                 <Button onClick={() => onSelect(ps)} className="w-full">
-                    View &amp; Choose Project <ArrowRight className="ml-2 w-4 h-4" />
+                 <Button onClick={() => onSelect(ps)} className="w-full" disabled={isAssigned}>
+                    {isAssigned ? 'Project Unavailable' : 'View & Choose Project'}
+                    {!isAssigned && <ArrowRight className="ml-2 w-4 h-4" />}
                  </Button>
             </CardFooter>
         </Card>

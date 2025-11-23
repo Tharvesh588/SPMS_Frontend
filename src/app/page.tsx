@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
-import { getUnassignedProblemStatements } from '@/lib/api';
+import { getProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { ProblemStatementList } from '@/components/problem-statement-list';
@@ -13,7 +13,7 @@ export default async function Home() {
     let problemStatements: ProblemStatement[] = [];
     let fetchError = false;
     try {
-        problemStatements = await getUnassignedProblemStatements();
+        problemStatements = await getProblemStatements();
     } catch (error) {
         console.error("Failed to fetch problem statements:", error);
         fetchError = true;
@@ -49,10 +49,10 @@ export default async function Home() {
                     <div className="container px-4 md:px-6">
                         <div className="space-y-3 text-center mb-12">
                             <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-4xl/tight">
-                                Available Projects
+                                Explore All Projects
                             </h2>
                             <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                Browse the unassigned problem statements below. Login as a batch to make your selection.
+                                Browse all problem statements below. Login as a batch to make a selection from the open projects.
                             </p>
                         </div>
                         {fetchError ? (
