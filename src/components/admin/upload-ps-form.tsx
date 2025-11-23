@@ -168,7 +168,7 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
             </FormItem>
           )}
         />
-        {!isFacultyRole && 'facultyId' in form.control.getValues() && (
+        {!isFacultyRole && (
         <FormField
           control={form.control}
           name="facultyId"
