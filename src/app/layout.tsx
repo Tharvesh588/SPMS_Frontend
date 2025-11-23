@@ -12,6 +12,9 @@ const spaceGrotesk = Space_Grotesk({ subsets: ['latin'], variable: '--font-space
 export const metadata: Metadata = {
   title: 'ProjectVerse',
   description: 'Manage and select final year projects.',
+  icons: {
+    icon: 'https://egspec.org/favicons/favicon.ico',
+  },
 };
 
 // Forcing a HMR refresh to fix a development server issue.
