@@ -5,7 +5,7 @@ import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon, Download } from 'lucide-react';
+import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon, Download, User } from 'lucide-react';
 import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport } from '@/lib/api';
 import type { ProblemStatement, Batch, Faculty } from '@/types';
 import { useEffect, useState, useCallback } from 'react';
@@ -21,7 +21,12 @@ const BatchSidebar = () => (
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
-    {/* Additional links can be added here if needed */}
+    <SidebarMenuItem>
+      <SidebarMenuButton href="/batch/profile" title="Profile">
+        <User />
+        Profile
+      </SidebarMenuButton>
+    </SidebarMenuItem>
   </SidebarMenu>
 );
 
@@ -327,4 +332,3 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect
     </Card>
   );
 }
-
