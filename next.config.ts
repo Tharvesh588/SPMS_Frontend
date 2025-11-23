@@ -1,6 +1,7 @@
 
 import type {NextConfig} from 'next';
 
+// Forcing a HMR refresh to fix a development server issue.
 const nextConfig: NextConfig = {
   /* config options here */
   typescript: {

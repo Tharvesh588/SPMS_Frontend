@@ -1,3 +1,4 @@
+
 import type {Metadata} from 'next';
 import './globals.css';
 import { Toaster } from "@/components/ui/toaster";
@@ -13,6 +14,7 @@ export const metadata: Metadata = {
   description: 'Manage and select final year projects.',
 };
 
+// Forcing a HMR refresh to fix a development server issue.
 export default function RootLayout({
   children,
 }: Readonly<{
