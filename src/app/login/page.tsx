@@ -1,7 +1,10 @@
 
+'use client';
+
 import LoginForm from '@/components/login-form';
 import Logo from '@/components/logo';
 import Link from 'next/link';
+import Image from 'next/image';
 import {
   Card,
   CardContent,
@@ -12,24 +15,35 @@ import {
 
 export default function LoginPage() {
   return (
-    <div className="flex items-center justify-center min-h-screen bg-background">
-      <div className="w-full max-w-md p-4">
-        <div className="text-center mb-8">
-            <div className="flex justify-center mb-4">
-              <Logo />
+    <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
+        <div className="flex items-center justify-center py-12">
+            <div className="mx-auto grid w-[350px] gap-6">
+                <div className="grid gap-2 text-center">
+                    <div className="flex justify-center mb-4">
+                      <Logo />
+                    </div>
+                    <h1 className="text-3xl font-bold font-headline">Welcome Back</h1>
+                    <p className="text-balance text-muted-foreground">
+                        Welcome back to ProjectVerse — Continue your journey
+                    </p>
+                </div>
+                <LoginForm />
+                <div className="mt-4 text-center text-sm">
+                  <Link href="/" className="underline">
+                      Back to Home
+                  </Link>
+                </div>
             </div>
-          <h1 className="text-3xl font-bold font-headline">Login to ProjectVerse</h1>
-          <p className="text-muted-foreground">Enter your credentials to access your dashboard</p>
         </div>
-        <LoginForm />
-         <p className="mt-8 px-8 text-center text-sm text-muted-foreground">
-            <Link
-              href="/"
-              className="underline underline-offset-4 hover:text-primary"
-            >
-              Back to Home
-            </Link>
-          </p>
+        <div className="hidden bg-muted lg:block">
+            <Image
+                src="https://cdn.jsdelivr.net/gh/Tharvesh2026/Web-Source@refs/heads/main/engineering_college.webp"
+                alt="Image"
+                width="1920"
+                height="1080"
+                className="h-full w-full object-cover dark:brightness-[0.2] dark:grayscale"
+                priority
+            />
       </div>
     </div>
   );
