@@ -16,7 +16,9 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    if (!token && url.startsWith("/admin") || !token && url.startsWith("/faculty") || !token && url.startsWith("/batch")) {
+    const isPublicEndpoint = url === '/problem-statements';
+
+    if (!token && !isPublicEndpoint && (url.startsWith("/admin") || url.startsWith("/faculty") || url.startsWith("/batch"))) {
          if(!options.headers || !options.headers.hasOwnProperty('Authorization')){
             throw new Error("Not authorized, no token.");
          }
@@ -140,13 +142,8 @@ export async function getBatchDetailsAsAdmin(batchId: string): Promise<{success:
 }
 
 export async function getBatches(): Promise<Batch[]> {
-  const { batches } = await fetcher<{
-    success: boolean;
-    count: number;
-    batches: Batch[];
-  }>("/admin/batches");
-
-  return batches;
+    const { batches } = await fetcher<{ success: boolean; count: number; batches: Batch[] }>("/admin/batches");
+    return batches;
 }
 
 
@@ -192,7 +189,7 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
     success: boolean;
     count: number;
     problemStatements: ProblemStatement[];
-  }>("/problem-statements", { headers: { 'Authorization': '' } }); // Public endpoint
+  }>("/problem-statements");
   return response.problemStatements;
 }
 
