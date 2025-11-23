@@ -23,7 +23,6 @@ export type Batch = {
     _id: string;
     batchName: string;
     username: string;
-    project?: string; 
     coordinatorId?: Faculty | string;
     projectId?: ProblemStatement | string;
     students: Student[];

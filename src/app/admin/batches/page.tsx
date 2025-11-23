@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useCallback, useEffect, useState } from 'react';
 import { getBatches, deleteBatch } from '@/lib/api';
-import type { Batch } from '@/types';
+import type { Batch, ProblemStatement } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
@@ -167,7 +167,7 @@ export default function ManageBatchesPage() {
                             <TableRow key={batch._id}>
                                 <TableCell className="font-medium">{batch.batchName}</TableCell>
                                 <TableCell className="hidden md:table-cell">{batch.username}</TableCell>
-                                <TableCell>{batch.project || 'Not Selected'}</TableCell>
+                                <TableCell>{(batch.projectId as ProblemStatement)?.title || 'Not Selected'}</TableCell>
                                 <TableCell>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
