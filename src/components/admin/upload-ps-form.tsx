@@ -105,8 +105,8 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
 
         if (onStatementCreated) {
             let populatedPs = newPs;
-            if (!isFacultyRole && newPs.facultyId) {
-                const faculty = faculties.find(f => f._id === (newPs.facultyId as any)._id);
+            if (!isFacultyRole && values.facultyId) {
+                const faculty = faculties.find(f => f._id === values.facultyId);
                 if (faculty) {
                     populatedPs = { ...newPs, facultyId: faculty };
                 }

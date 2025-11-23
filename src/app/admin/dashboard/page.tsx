@@ -9,7 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
 
 const AdminSidebar = () => (
@@ -51,34 +51,39 @@ export default function AdminDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        setIsLoading(true);
-        const [faculties, batches, problemStatements] = await Promise.all([
-          getFaculties(),
-          getBatches(),
-          getProblemStatements(),
-        ]);
-        
-        const projectsSelected = batches.filter(batch => batch.project).length;
-        const assignedProblemStatements = problemStatements.filter(ps => ps.isAssigned).length;
+  const fetchData = useCallback(async () => {
+    try {
+      setIsLoading(true);
+      const [faculties, batches, problemStatements] = await Promise.all([
+        getFaculties(),
+        getBatches(),
+        getProblemStatements(),
+      ]);
+      
+      const projectsSelected = batches.filter(batch => batch.project).length;
+      const assignedProblemStatements = problemStatements.filter(ps => ps.isAssigned).length;
 
-        setStats({
-          faculties: faculties.length,
-          batches: batches.length,
-          projectsSelected: projectsSelected,
-          totalProblemStatements: problemStatements.length,
-          assignedProblemStatements: assignedProblemStatements,
-        });
-      } catch (error) {
-        console.error("Failed to fetch dashboard stats:", error);
-      } finally {
-        setIsLoading(false);
-      }
+      setStats({
+        faculties: faculties.length,
+        batches: batches.length,
+        projectsSelected: projectsSelected,
+        totalProblemStatements: problemStatements.length,
+        assignedProblemStatements: assignedProblemStatements,
+      });
+    } catch (error) {
+      console.error("Failed to fetch dashboard stats:", error);
+    } finally {
+      setIsLoading(false);
     }
-    fetchData();
   }, []);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
+
+  const handleCreation = () => {
+    fetchData();
+  };
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
@@ -110,7 +115,7 @@ export default function AdminDashboard() {
                             <DialogHeader>
                                 <DialogTitle>Create Faculty Account</DialogTitle>
                             </DialogHeader>
-                            <CreateFacultyForm />
+                            <CreateFacultyForm onFacultyCreated={handleCreation}/>
                         </DialogContent>
                     </Dialog>
                     
@@ -128,7 +133,7 @@ export default function AdminDashboard() {
                             <DialogHeader>
                                 <DialogTitle>Create Batch Account</DialogTitle>
                             </DialogHeader>
-                            <CreateBatchForm />
+                            <CreateBatchForm onBatchCreated={handleCreation}/>
                         </DialogContent>
                     </Dialog>
 
@@ -146,7 +151,7 @@ export default function AdminDashboard() {
                             <DialogHeader>
                                 <DialogTitle>Upload Problem Statement</DialogTitle>
                             </DialogHeader>
-                            <UploadProblemStatementForm />
+                            <UploadProblemStatementForm onStatementCreated={handleCreation}/>
                         </DialogContent>
                     </Dialog>
                 </CardContent>
