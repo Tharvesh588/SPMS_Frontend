@@ -15,25 +15,25 @@ import { getFaculties, getBatches, getProblemStatements } from '@/lib/api';
 const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin" isActive>
+      <SidebarMenuButton href="/u/portal/admin?page=dashboard" isActive>
         <LayoutDashboard />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/faculty">
+      <SidebarMenuButton href="/u/portal/admin?page=faculty">
         <Users />
         Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/batches">
+      <SidebarMenuButton href="/u/portal/admin?page=batches">
         <BookCopy />
         Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/problem-statements">
+      <SidebarMenuButton href="/u/portal/admin?page=problem-statements">
         <FilePlus2 />
         Problem Statements
       </SidebarMenuButton>

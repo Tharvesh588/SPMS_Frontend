@@ -27,25 +27,25 @@ import type { ProblemStatement, Faculty } from '@/types';
 const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin">
+      <SidebarMenuButton href="/u/portal/admin?page=dashboard">
         <LayoutDashboard />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/faculty">
+      <SidebarMenuButton href="/u/portal/admin?page=faculty">
         <Users />
         Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/batches">
+      <SidebarMenuButton href="/u/portal/admin?page=batches">
         <BookCopy />
         Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/problem-statements" isActive>
+      <SidebarMenuButton href="/u/portal/admin?page=problem-statements" isActive>
         <FilePlus2 />
         Problem Statements
       </SidebarMenuButton>

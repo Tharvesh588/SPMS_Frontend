@@ -27,25 +27,25 @@ import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin">
+      <SidebarMenuButton href="/u/portal/admin?page=dashboard">
         <LayoutDashboard />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/faculty">
+      <SidebarMenuButton href="/u/portal/admin?page=faculty">
         <Users />
         Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/batches" isActive>
+      <SidebarMenuButton href="/u/portal/admin?page=batches" isActive>
         <BookCopy />
         Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/admin/problem-statements">
+      <SidebarMenuButton href="/u/portal/admin?page=problem-statements">
         <FilePlus2 />
         Problem Statements
       </SidebarMenuButton>

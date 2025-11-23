@@ -16,13 +16,13 @@ import { SaveStudentsForm } from '@/components/batch/save-students-form';
 const BatchSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/batch" isActive title="Dashboard">
+      <SidebarMenuButton href="/u/portal/batch?page=dashboard" isActive title="Dashboard">
         <LayoutDashboard />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/dashboard/batch/profile" title="Profile">
+      <SidebarMenuButton href="/u/portal/batch?page=profile" title="Profile">
         <User />
         Profile
       </SidebarMenuButton>
