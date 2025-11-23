@@ -17,7 +17,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
 
     const publicEndpoints = ['/problem-statements/unassigned', '/problem-statements'];
-    const isPublicEndpoint = publicEndpoints.includes(url.replace(API_BASE_URL, '')) || url.startsWith('/auth/login');
+    const isPublicEndpoint = publicEndpoints.some(publicUrl => url.includes(publicUrl)) || url.startsWith('/auth/login');
 
 
     if (!token && !isPublicEndpoint && (url.startsWith("/admin") || url.startsWith("/faculty") || url.startsWith("/batch"))) {
