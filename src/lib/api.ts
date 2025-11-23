@@ -16,7 +16,8 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         headers['Authorization'] = `Bearer ${token}`;
     }
 
-    const isPublicEndpoint = url === '/problem-statements';
+    const publicEndpoints = ['/problem-statements/unassigned', '/problem-statements'];
+    const isPublicEndpoint = publicEndpoints.includes(url);
 
     if (!token && !isPublicEndpoint && (url.startsWith("/admin") || url.startsWith("/faculty") || url.startsWith("/batch"))) {
          if(!options.headers || !options.headers.hasOwnProperty('Authorization')){
@@ -191,6 +192,10 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
     problemStatements: ProblemStatement[];
   }>("/problem-statements");
   return response.problemStatements;
+}
+
+export async function getUnassignedProblemStatements(): Promise<{ problemStatements: ProblemStatement[] }> {
+  return fetcher<{ problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
 }
 
 

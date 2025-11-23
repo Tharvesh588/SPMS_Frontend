@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
-import { getProblemStatements } from '@/lib/api';
+import { getUnassignedProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { ProblemStatementList } from '@/components/problem-statement-list';
@@ -13,9 +13,8 @@ export default async function Home() {
     let problemStatements: ProblemStatement[] = [];
     let fetchError = false;
     try {
-        // Fetch all and filter for unassigned, as there is no dedicated public endpoint for unassigned.
-        const allStatements = await getProblemStatements();
-        problemStatements = allStatements.filter(ps => !ps.isAssigned);
+        const response = await getUnassignedProblemStatements();
+        problemStatements = response.problemStatements;
     } catch (error) {
         console.error("Failed to fetch problem statements:", error);
         fetchError = true;
