@@ -142,14 +142,15 @@ export async function getBatches(): Promise<Batch[]> {
 
   const detailedBatches = await Promise.all(
     response.batches.map(async (batch) => {
-      if (batch.projectId && typeof batch.projectId === 'string') {
+      // Only fetch details if the batch is locked, indicating a project has been chosen.
+      if (batch.isLocked && batch.projectId && typeof batch.projectId === 'string') {
         try {
-          // Use the admin-specific endpoint
           const { batch: detailedBatch } = await getBatchDetailsAsAdmin(batch._id);
           return detailedBatch;
         } catch (error) {
-          console.error(`Failed to fetch details for batch ${batch._id} as admin`, error);
-          return batch; // Return original batch if details fetch fails
+          console.error(`Failed to fetch details for locked batch ${batch._id} as admin`, error);
+          // Return original batch if details fetch fails to avoid breaking the list
+          return batch; 
         }
       }
       return batch;
