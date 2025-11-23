@@ -82,7 +82,7 @@ export function ProblemStatementList({ statements }: { statements: ProblemStatem
                                 </div>
                             </div>
                             <Button asChild className="w-full">
-                                <Link href="/login">Choose Project & Login</Link>
+                                <Link href="/u/portal/auth">Choose Project & Login</Link>
                             </Button>
                         </>
                     )}

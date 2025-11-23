@@ -25,7 +25,7 @@ export default async function Home() {
                 <Logo />
                 <nav className="ml-auto">
                     <Button asChild>
-                        <Link href="/login">Login</Link>
+                        <Link href="/u/portal/auth">Login</Link>
                     </Button>
                 </nav>
             </header>

@@ -26,12 +26,12 @@ import type { ProblemStatement } from '@/types';
 const FacultySidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/faculty/dashboard" title="Dashboard">
+      <SidebarMenuButton href="/u/portal/dashboard/faculty" title="Dashboard">
         <LayoutDashboard />
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/faculty/problem-statements" isActive title="My Statements">
+      <SidebarMenuButton href="/u/portal/dashboard/faculty/problem-statements" isActive title="My Statements">
         <FileText />
       </SidebarMenuButton>
     </SidebarMenuItem>

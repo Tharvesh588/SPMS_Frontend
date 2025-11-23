@@ -13,12 +13,12 @@ import { useToast } from '@/hooks/use-toast';
 const FacultySidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/faculty/dashboard" isActive title="Dashboard">
+      <SidebarMenuButton href="/u/portal/dashboard/faculty" isActive title="Dashboard">
         <LayoutDashboard />
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/faculty/problem-statements" title="My Statements">
+      <SidebarMenuButton href="/u/portal/dashboard/faculty/problem-statements" title="My Statements">
         <FileText />
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -75,7 +75,7 @@ export default function FacultyDashboard() {
                 </CardHeader>
                 <CardContent>
                   <Button asChild className="group">
-                    <Link href="/faculty/problem-statements">
+                    <Link href="/u/portal/dashboard/faculty/problem-statements">
                       <FileText className="mr-2 h-4 w-4" />
                       Upload & Manage Statements
                       <ArrowRight className="ml-2 w-4 h-4 transition-transform group-hover:translate-x-1" />
