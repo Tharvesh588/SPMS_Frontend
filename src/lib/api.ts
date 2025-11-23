@@ -129,6 +129,10 @@ export async function deleteFaculty(id: string): Promise<void> {
 
 
 // Admin - Batches
+export async function getBatchDetailsAsAdmin(batchId: string): Promise<{success: boolean, batch: Batch}> {
+    return fetcher(`/admin/batches/${batchId}`);
+}
+
 export async function getBatches(): Promise<Batch[]> {
   const response = await fetcher<{
     success: boolean;
@@ -136,19 +140,16 @@ export async function getBatches(): Promise<Batch[]> {
     batches: Batch[];
   }>("/admin/batches");
 
-  // The /admin/batches endpoint might not populate the projectId.
-  // We need to fetch full details for each batch to ensure we have the project title.
   const detailedBatches = await Promise.all(
     response.batches.map(async (batch) => {
       if (batch.projectId && typeof batch.projectId === 'string') {
         try {
-          // Fetch the full details which should contain the populated projectId object
-          const { batch: detailedBatch } = await getBatchDetails(batch._id);
+          // Use the admin-specific endpoint
+          const { batch: detailedBatch } = await getBatchDetailsAsAdmin(batch._id);
           return detailedBatch;
         } catch (error) {
-          console.error(`Failed to fetch details for batch ${batch._id}`, error);
-          // Return original batch if details fetch fails
-          return batch;
+          console.error(`Failed to fetch details for batch ${batch._id} as admin`, error);
+          return batch; // Return original batch if details fetch fails
         }
       }
       return batch;
@@ -168,7 +169,7 @@ export async function createBatch(batchData: CreateBatchData): Promise<{success:
         method: 'POST',
         body: JSON.stringify({
             ...batchData,
-            apiKey: 'temp-key' 
+            apiKey: 'temp-key'
         })
     });
     return response;
