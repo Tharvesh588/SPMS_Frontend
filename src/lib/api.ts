@@ -195,10 +195,10 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
   return response.problemStatements;
 }
 
-export async function getUnassignedProblemStatements(): Promise<{ problemStatements: ProblemStatement[] }> {
-  return fetcher<{ problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
+export async function getUnassignedProblemStatements(): Promise<ProblemStatement[]> {
+    const response = await fetcher<{ problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
+    return response.problemStatements;
 }
-
 
 export async function getProblemStatementsForAdmin(): Promise<ProblemStatement[]> {
   const response = await fetcher<{
