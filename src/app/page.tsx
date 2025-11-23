@@ -13,7 +13,9 @@ export default async function Home() {
     let problemStatements: ProblemStatement[] = [];
     let fetchError = false;
     try {
-        problemStatements = await getProblemStatements();
+        // Fetch all and filter for unassigned, as there is no dedicated public endpoint for unassigned.
+        const allStatements = await getProblemStatements();
+        problemStatements = allStatements.filter(ps => !ps.isAssigned);
     } catch (error) {
         console.error("Failed to fetch problem statements:", error);
         fetchError = true;
@@ -49,10 +51,10 @@ export default async function Home() {
                     <div className="container px-4 md:px-6">
                         <div className="space-y-3 text-center mb-12">
                             <h2 className="text-3xl font-headline font-bold tracking-tighter md:text-4xl/tight">
-                                Explore All Projects
+                                Available Projects
                             </h2>
                             <p className="mx-auto max-w-[600px] text-muted-foreground md:text-xl/relaxed lg:text-base/relaxed xl:text-xl/relaxed">
-                                Browse all problem statements below. Login as a batch to make a selection from the open projects.
+                                Browse the unassigned problem statements below. Login as a batch to make your selection.
                             </p>
                         </div>
                         {fetchError ? (
