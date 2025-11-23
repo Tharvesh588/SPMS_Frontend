@@ -1,25 +1,28 @@
 
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
-import { ArrowRight } from 'lucide-react';
+import { ArrowRight, Book, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
-import { getUnassignedProblemStatements } from '@/lib/api';
+import { getProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { ProblemStatementList } from '@/components/problem-statement-list';
 import Image from 'next/image';
 
 export default async function Home() {
-    let problemStatements: ProblemStatement[] = [];
+    let allStatements: ProblemStatement[] = [];
     let fetchError = false;
     try {
-        const response = await getUnassignedProblemStatements();
-        problemStatements = response.problemStatements;
+        allStatements = await getProblemStatements();
     } catch (error) {
         console.error("Failed to fetch problem statements:", error);
         fetchError = true;
     }
+
+    const unassignedStatements = allStatements.filter(ps => !ps.isAssigned);
+    const totalCount = allStatements.length;
+    const unassignedCount = unassignedStatements.length;
 
     return (
         <div className="flex flex-col min-h-dvh bg-background">
@@ -53,6 +56,26 @@ export default async function Home() {
                                     Your central hub for managing, distributing, and selecting final year projects.
                                 </p>
                             </div>
+                            <div className="grid grid-cols-2 gap-4 pt-6">
+                                <Card className="bg-background/80">
+                                    <CardHeader className="flex-row items-center justify-between pb-2">
+                                        <CardTitle className="text-sm font-medium">Total Projects</CardTitle>
+                                        <Book className="h-4 w-4 text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{totalCount}</div>
+                                    </CardContent>
+                                </Card>
+                                <Card className="bg-background/80">
+                                    <CardHeader className="flex-row items-center justify-between pb-2">
+                                        <CardTitle className="text-sm font-medium">Available Projects</CardTitle>
+                                        <CheckSquare className="h-4 w-4 text-muted-foreground" />
+                                    </CardHeader>
+                                    <CardContent>
+                                        <div className="text-2xl font-bold">{unassignedCount}</div>
+                                    </CardContent>
+                                </Card>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -72,7 +95,7 @@ export default async function Home() {
                                 <p>Failed to load problem statements. Please try again later.</p>
                              </div>
                         ) : (
-                           <ProblemStatementList statements={problemStatements} />
+                           <ProblemStatementList statements={unassignedStatements} />
                         )}
                     </div>
                 </section>
