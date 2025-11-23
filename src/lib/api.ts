@@ -17,7 +17,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     }
 
     const publicEndpoints = ['/problem-statements/unassigned', '/problem-statements'];
-    const isPublicEndpoint = publicEndpoints.includes(url) || url.startsWith('/auth/login');
+    const isPublicEndpoint = publicEndpoints.includes(url.replace(API_BASE_URL, '')) || url.startsWith('/auth/login');
 
 
     if (!token && !isPublicEndpoint && (url.startsWith("/admin") || url.startsWith("/faculty") || url.startsWith("/batch"))) {
@@ -196,7 +196,7 @@ export async function getProblemStatements(): Promise<ProblemStatement[]> {
 }
 
 export async function getUnassignedProblemStatements(): Promise<ProblemStatement[]> {
-    const response = await fetcher<{ problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
+    const response = await fetcher<{ success: boolean, count: number, problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
     return response.problemStatements;
 }
 

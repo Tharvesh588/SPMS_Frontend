@@ -4,7 +4,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { ArrowRight, Book, CheckSquare } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Logo from '@/components/logo';
-import { getProblemStatements } from '@/lib/api';
+import { getProblemStatements, getUnassignedProblemStatements } from '@/lib/api';
 import type { ProblemStatement } from '@/types';
 import { Badge } from '@/components/ui/badge';
 import { ProblemStatementList } from '@/components/problem-statement-list';
@@ -12,15 +12,17 @@ import Image from 'next/image';
 
 export default async function Home() {
     let allStatements: ProblemStatement[] = [];
+    let unassignedStatements: ProblemStatement[] = [];
     let fetchError = false;
     try {
+        // Fetch both all and unassigned statements
         allStatements = await getProblemStatements();
+        unassignedStatements = await getUnassignedProblemStatements();
     } catch (error) {
         console.error("Failed to fetch problem statements:", error);
         fetchError = true;
     }
 
-    const unassignedStatements = allStatements.filter(ps => !ps.isAssigned);
     const totalCount = allStatements.length;
     const unassignedCount = unassignedStatements.length;
 
