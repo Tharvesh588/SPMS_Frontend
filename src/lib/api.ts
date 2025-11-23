@@ -139,24 +139,7 @@ export async function getBatches(): Promise<Batch[]> {
     count: number;
     batches: Batch[];
   }>("/admin/batches");
-
-  const detailedBatches = await Promise.all(
-    response.batches.map(async (batch) => {
-      // Only fetch details if the batch has a project selected.
-      if (batch.projectId && typeof batch.projectId === 'string') {
-        try {
-          const { batch: detailedBatch } = await getBatchDetailsAsAdmin(batch._id);
-          return detailedBatch;
-        } catch (error) {
-          console.error(`Failed to fetch details for batch ${batch._id} as admin`, error);
-          // Return original batch if details fetch fails to avoid breaking the list
-          return batch; 
-        }
-      }
-      return batch;
-    })
-  );
-  return detailedBatches;
+  return response.batches;
 }
 
 type CreateBatchData = {

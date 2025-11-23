@@ -123,6 +123,13 @@ export default function ManageBatchesPage() {
     }
   }
 
+  const getCoordinatorName = (coordinator: Faculty | string | undefined) => {
+    if (typeof coordinator === 'object' && coordinator !== null && 'name' in coordinator) {
+        return coordinator.name;
+    }
+    return 'Not Selected';
+  }
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <Card>
@@ -167,7 +174,7 @@ export default function ManageBatchesPage() {
                             <TableRow key={batch._id}>
                                 <TableCell className="font-medium">{batch.batchName}</TableCell>
                                 <TableCell className="hidden md:table-cell">{batch.username}</TableCell>
-                                <TableCell>{(batch.coordinatorId as Faculty)?.name || 'Not Selected'}</TableCell>
+                                <TableCell>{getCoordinatorName(batch.coordinatorId)}</TableCell>
                                 <TableCell>
                                      <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
