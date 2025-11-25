@@ -37,6 +37,8 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
   const handleLogout = () => {
     if(typeof window !== 'undefined') {
       localStorage.removeItem('token');
+      localStorage.removeItem('userId');
+      localStorage.removeItem('userRole');
     }
     router.push('/');
   }

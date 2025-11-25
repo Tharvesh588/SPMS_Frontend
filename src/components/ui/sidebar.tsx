@@ -496,7 +496,7 @@ const SidebarMenuButton = React.forwardRef<
     const buttonContent = (
       <div className={cn("flex items-center gap-2", isMobile && "flex-col text-xs")}>
           {children}
-          <span className={cn("flex-1 transition-opacity duration-200", (state === 'collapsed' || isMobile) ? 'opacity-0' : 'opacity-100', isMobile && 'hidden')}>{props.title}</span>
+          <span className={cn("flex-1 transition-opacity duration-200", (state === 'collapsed' && !isMobile) && 'sr-only' )}>{props.title}</span>
       </div>
   )
 

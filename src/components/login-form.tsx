@@ -71,7 +71,11 @@ export default function LoginForm() {
     try {
       const response = await login(credentials, values.role);
       const uid = response.user.id;
-      router.push(`/u/portal/${values.role}?page=dashboard&uid=${uid}`);
+      if (typeof window !== 'undefined') {
+        localStorage.setItem('userId', uid);
+        localStorage.setItem('userRole', values.role);
+      }
+      router.push(`/u/portal/${values.role}?page=dashboard`);
     } catch (error) {
       console.error("Login failed:", error);
       toast({

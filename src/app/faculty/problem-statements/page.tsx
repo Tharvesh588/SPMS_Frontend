@@ -28,11 +28,13 @@ const FacultySidebar = () => (
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/faculty?page=dashboard" title="Dashboard">
         <LayoutDashboard />
+        Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/faculty?page=problem-statements" isActive title="My Statements">
         <FileText />
+        My Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
   </SidebarMenu>
