@@ -4,7 +4,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, CheckSquare, Loader2, FileText } from 'lucide-react';
+import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, CheckSquare, Loader2, FileText, ArrowUpRight } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
@@ -16,25 +16,25 @@ const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=dashboard" isActive>
-        <LayoutDashboard />
+        <LayoutDashboard className="h-4 w-4" />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=faculty">
-        <Users />
+        <Users className="h-4 w-4" />
         Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=batches">
-        <BookCopy />
+        <BookCopy className="h-4 w-4" />
         Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=problem-statements">
-        <FilePlus2 />
+        <FilePlus2 className="h-4 w-4" />
         Problem Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -91,20 +91,20 @@ export default function AdminDashboard() {
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-        <div className="flex flex-col gap-6">
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-6 w-6 text-muted-foreground" />} isLoading={isLoading} />
+        <div className="flex flex-col gap-4">
+             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+              <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+              <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
             </div>
 
             <Card>
                 <CardHeader>
                     <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Manage the system from here.</CardDescription>
+                    <CardDescription>Manage the system from one place.</CardDescription>
                 </CardHeader>
-                <CardContent className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <Dialog>
                         <DialogTrigger asChild>
                              <Button className="w-full justify-start p-6 text-left h-auto">

@@ -16,14 +16,14 @@ import { SaveStudentsForm } from '@/components/batch/save-students-form';
 const BatchSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/batch?page=dashboard" isActive title="Dashboard">
-        <LayoutDashboard />
+      <SidebarMenuButton href="/u/portal/batch?page=dashboard" isActive>
+        <LayoutDashboard className="h-4 w-4" />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/batch?page=profile" title="Profile">
-        <User />
+      <SidebarMenuButton href="/u/portal/batch?page=profile">
+        <User className="h-4 w-4" />
         Profile
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -100,11 +100,13 @@ export default function BatchDashboard() {
 
   return (
     <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
-      {batchDetails?.isLocked ? (
-        <SelectedProjectView batch={batchDetails} />
-      ) : (
-        <AvailableProjectsView onProjectSelected={handleProjectSelection} />
-      )}
+      <div className="flex flex-col gap-4">
+        {batchDetails?.isLocked ? (
+          <SelectedProjectView batch={batchDetails} />
+        ) : (
+          <AvailableProjectsView onProjectSelected={handleProjectSelection} />
+        )}
+      </div>
     </DashboardLayout>
   );
 }
@@ -169,9 +171,8 @@ function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () =>
 
     return (
         <>
-            <div className="flex items-center justify-between">
-                <h2 className="text-2xl font-headline font-semibold">Available Problem Statements</h2>
-                <p className="text-muted-foreground">You can select 1 project.</p>
+            <div className="flex items-center">
+                <h1 className="text-lg font-semibold md:text-2xl">Available Projects</h1>
             </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-4">
             {statements.map((ps) => (
@@ -260,7 +261,7 @@ ${report.students.map((s: any, i: number) => `  ${i+1}. ${s.nameInitial} (${s.ro
 
   return (
     <div>
-        <div className="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-md mb-8" role="alert">
+        <div className="bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-8" role="alert">
             <div className="flex">
                 <div className="py-1"><CheckCircle className="h-6 w-6 text-green-500 mr-4" /></div>
                 <div>
@@ -270,7 +271,7 @@ ${report.students.map((s: any, i: number) => `  ${i+1}. ${s.nameInitial} (${s.ro
             </div>
         </div>
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-3xl font-headline font-bold">My Project Details</h2>
+        <h1 className="text-lg font-semibold md:text-2xl">My Project</h1>
         <Button onClick={handleDownloadReport} disabled={isDownloading}>
             {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
             Download Report
@@ -286,7 +287,7 @@ ${report.students.map((s: any, i: number) => `  ${i+1}. ${s.nameInitial} (${s.ro
                     <p className="text-muted-foreground mb-6">{project.description}</p>
                 </CardContent>
                  <CardFooter>
-                    <Button asChild variant="link">
+                    <Button asChild variant="link" className="px-0">
                         <a href={project.gDriveLink} target="_blank" rel="noopener noreferrer">View Google Drive Link</a>
                     </Button>
                 </CardFooter>

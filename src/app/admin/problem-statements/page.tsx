@@ -28,25 +28,25 @@ const AdminSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=dashboard">
-        <LayoutDashboard />
+        <LayoutDashboard className="h-4 w-4" />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=faculty">
-        <Users />
+        <Users className="h-4 w-4" />
         Manage Faculty
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=batches">
-        <BookCopy />
+        <BookCopy className="h-4 w-4" />
         Manage Batches
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
       <SidebarMenuButton href="/u/portal/admin?page=problem-statements" isActive>
-        <FilePlus2 />
+        <FilePlus2 className="h-4 w-4" />
         Problem Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -120,12 +120,9 @@ export default function ManageProblemStatementsPage() {
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Manage Problem Statements</CardTitle>
-                    <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
-                </div>
+      <div className="flex items-center">
+            <h1 className="text-lg font-semibold md:text-2xl">Problem Statements</h1>
+            <div className="ml-auto flex items-center gap-2">
                  <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                   <DialogTrigger asChild>
                     <Button>
@@ -140,6 +137,12 @@ export default function ManageProblemStatementsPage() {
                     <UploadProblemStatementForm onStatementCreated={handleStatementCreated} />
                   </DialogContent>
                 </Dialog>
+            </div>
+      </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>All Problem Statements</CardTitle>
+                <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (

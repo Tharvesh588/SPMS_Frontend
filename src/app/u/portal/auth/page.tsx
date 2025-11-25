@@ -11,7 +11,7 @@ export default function LoginPage() {
     <div className="w-full min-h-screen lg:grid lg:grid-cols-2">
         <div className="hidden bg-muted lg:block">
             <Image
-                src="https://cdn.jsdelivr.net/gh/Tharvesh2026/Web-Source@refs/heads/main/engineering_college.webp"
+                src="https://cdn.jsdelivr.net/gh/Tharvesh2026/Web-Source@main/engineering_college.webp?raw=true"
                 alt="Image"
                 width="1920"
                 height="1080"

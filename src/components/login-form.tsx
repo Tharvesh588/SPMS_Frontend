@@ -23,7 +23,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useState } from 'react';
-import { Loader2, Mail, Lock } from 'lucide-react';
+import { Loader2, Mail, Lock, Users, User, Building } from 'lucide-react';
 import { login } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { Checkbox } from './ui/checkbox';
@@ -88,6 +88,15 @@ export default function LoginForm() {
     }
   }
 
+  const getRoleIcon = () => {
+    switch (selectedRole) {
+        case 'admin': return <User className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+        case 'faculty': return <Building className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+        case 'batch': return <Users className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+        default: return <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />;
+    }
+  }
+
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
@@ -119,13 +128,13 @@ export default function LoginForm() {
             name="identifier"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>{selectedRole === 'batch' ? 'Username' : 'Your email'}</FormLabel>
+                <FormLabel>{selectedRole === 'batch' ? 'Username' : 'Email'}</FormLabel>
                 <FormControl>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                    {getRoleIcon()}
                     <Input 
                         className="pl-10"
-                        placeholder={selectedRole === 'batch' ? 'Enter your batch username' : 'Enter your email'} 
+                        placeholder={selectedRole === 'batch' ? 'Enter your batch username' : 'name@example.com'} 
                         {...field} />
                   </div>
                 </FormControl>
@@ -139,37 +148,25 @@ export default function LoginForm() {
             name="password"
             render={({ field }) => (
             <FormItem>
-                <FormLabel>Password</FormLabel>
+                <div className="flex items-center">
+                    <FormLabel>Password</FormLabel>
+                    <Link
+                        href="#"
+                        className="ml-auto inline-block text-sm underline"
+                    >
+                        Forgot your password?
+                    </Link>
+                </div>
                 <FormControl>
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                    <Input className="pl-10" type="password" placeholder="Enter your password" {...field} />
+                    <Input className="pl-10" type="password" placeholder="Enter your password" {...field} required />
                   </div>
                 </FormControl>
                 <FormMessage />
             </FormItem>
             )}
         />
-        <div className="flex items-center justify-between text-sm">
-            <FormField
-                control={form.control}
-                name="rememberMe"
-                render={({ field }) => (
-                    <FormItem className="flex items-center space-x-2 space-y-0">
-                        <FormControl>
-                            <Checkbox
-                                checked={field.value}
-                                onCheckedChange={field.onChange}
-                            />
-                        </FormControl>
-                        <FormLabel className="font-normal">Remember me</FormLabel>
-                    </FormItem>
-                )}
-            />
-            <Link href="#" className="underline">
-                Forgot password?
-            </Link>
-        </div>
         <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
             Sign In

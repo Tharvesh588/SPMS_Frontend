@@ -26,14 +26,14 @@ import type { ProblemStatement } from '@/types';
 const FacultySidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/faculty?page=dashboard" title="Dashboard">
-        <LayoutDashboard />
+      <SidebarMenuButton href="/u/portal/faculty?page=dashboard">
+        <LayoutDashboard className="h-4 w-4" />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/faculty?page=problem-statements" isActive title="My Statements">
-        <FileText />
+      <SidebarMenuButton href="/u/portal/faculty?page=problem-statements" isActive>
+        <FileText className="h-4 w-4" />
         My Statements
       </SidebarMenuButton>
     </SidebarMenuItem>
@@ -102,13 +102,10 @@ export default function ManageFacultyProblemStatementsPage() {
 
   return (
     <DashboardLayout userRole="Faculty" sidebarContent={<FacultySidebar />}>
-        <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-                <div>
-                    <CardTitle>Manage My Problem Statements</CardTitle>
-                    <CardDescription>View, edit, and manage your uploaded project ideas.</CardDescription>
-                </div>
-                 <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+        <div className="flex items-center">
+            <h1 className="text-lg font-semibold md:text-2xl">My Problem Statements</h1>
+            <div className="ml-auto flex items-center gap-2">
+                <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                   <DialogTrigger asChild>
                     <Button>
                         <PlusCircle className="mr-2 h-4 w-4" />
@@ -122,6 +119,12 @@ export default function ManageFacultyProblemStatementsPage() {
                     <UploadProblemStatementForm onStatementCreated={handleStatementCreated} asRole="faculty" />
                   </DialogContent>
                 </Dialog>
+            </div>
+        </div>
+        <Card>
+            <CardHeader>
+                <CardTitle>My Uploaded Statements</CardTitle>
+                <CardDescription>View, edit, and manage your uploaded project ideas.</CardDescription>
             </CardHeader>
             <CardContent>
               {isLoading ? (

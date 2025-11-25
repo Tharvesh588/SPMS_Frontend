@@ -14,14 +14,14 @@ import { useToast } from '@/hooks/use-toast';
 const BatchSidebar = () => (
   <SidebarMenu>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/batch?page=dashboard" title="Dashboard">
-        <LayoutDashboard />
+      <SidebarMenuButton href="/u/portal/batch?page=dashboard">
+        <LayoutDashboard className="h-4 w-4" />
         Dashboard
       </SidebarMenuButton>
     </SidebarMenuItem>
     <SidebarMenuItem>
-      <SidebarMenuButton href="/u/portal/batch?page=profile" isActive title="Profile">
-        <User />
+      <SidebarMenuButton href="/u/portal/batch?page=profile" isActive>
+        <User className="h-4 w-4" />
         Profile
       </SidebarMenuButton>
     </SidebarMenuItem>
