@@ -17,6 +17,8 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         } else {
+            // Immediately throw an error if a protected route is accessed without a token.
+            // This prevents the API call from even being made.
             throw new Error("Not authorized for this role.");
         }
     }
@@ -45,6 +47,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
             errMessage = response.statusText || 'Failed to fetch from API';
         }
         
+        // This is where the backend error message "Not authorized for this role" gets thrown
         throw new Error(errMessage);
     }
     
@@ -178,15 +181,6 @@ export async function deleteBatch(id: string): Promise<void> {
 
 
 // Problem Statements (Public / Admin)
-export async function getProblemStatements(): Promise<ProblemStatement[]> {
-  const response = await fetcher<{
-    success: boolean;
-    count: number;
-    problemStatements: ProblemStatement[];
-  }>("/problem-statements");
-  return response.problemStatements;
-}
-
 export async function getUnassignedProblemStatements(): Promise<ProblemStatement[]> {
     const response = await fetcher<{ success: boolean, count: number, problemStatements: ProblemStatement[] }>("/problem-statements/unassigned");
     return response.problemStatements;
