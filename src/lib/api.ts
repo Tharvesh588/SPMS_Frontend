@@ -6,24 +6,19 @@ const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
 // Universal fetch helper
 async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-
     const headers: HeadersInit = {
         'Content-Type': 'application/json',
         ...options.headers,
     };
 
-    if (token && !options.headers?.hasOwnProperty('Authorization')) {
-        headers['Authorization'] = `Bearer ${token}`;
-    }
+    const isProtectedRoute = url.startsWith('/admin') || url.startsWith('/faculty') || url.startsWith('/batch');
 
-    const publicEndpoints = ['/problem-statements/unassigned', '/problem-statements'];
-    const isPublicEndpoint = publicEndpoints.some(publicUrl => url.includes(publicUrl)) || url.startsWith('/auth/login');
-
-
-    if (!token && !isPublicEndpoint && (url.startsWith("/admin") || url.startsWith("/faculty") || url.startsWith("/batch"))) {
-         if(!options.headers || !options.headers.hasOwnProperty('Authorization')){
-            throw new Error("Not authorized, no token.");
-         }
+    if (isProtectedRoute) {
+        if (token) {
+            headers['Authorization'] = `Bearer ${token}`;
+        } else {
+            throw new Error("Not authorized for this role.");
+        }
     }
 
     const response = await fetch(`${API_BASE_URL}${url}`, {
@@ -32,12 +27,10 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     });
 
     if (!response.ok) {
-        // For DELETE requests, a 200 or 204 status is often success with no content.
         if (options.method === 'DELETE' && (response.status === 200 || response.status === 204)) {
             return {} as T;
         }
         
-        // Try to parse the error response as JSON, but handle cases where it's not.
         const contentType = response.headers.get("content-type");
         let errMessage = `Request failed with status: ${response.status}`;
 
@@ -49,20 +42,18 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
                 errMessage = `Failed to parse JSON error response. Status: ${response.status} ${response.statusText}`;
             }
         } else {
-            // If not JSON, use the status text.
             errMessage = response.statusText || 'Failed to fetch from API';
         }
         
         throw new Error(errMessage);
     }
     
-    // Handle responses that might not have a body (like DELETE)
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     }
     
-    return {} as T; // Return empty object for non-json responses
+    return {} as T;
 }
 
 
@@ -78,7 +69,6 @@ type LoginResponse = {
     user: {
         id: string;
         role: 'admin' | 'faculty' | 'batch';
-        // other user properties...
     }
 }
 
