@@ -15,6 +15,13 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -22,7 +29,7 @@ import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { getProblemStatementsForAdmin, deleteProblemStatement } from '@/lib/api';
 import type { ProblemStatement, Faculty } from '@/types';
-
+import { departments } from '@/lib/constants';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -59,12 +66,14 @@ export default function ManageProblemStatementsPage() {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
+  const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const { toast } = useToast();
 
   const fetchStatements = useCallback(async () => {
     try {
       setIsLoading(true);
-      const data = await getProblemStatementsForAdmin();
+      const filter = departmentFilter === 'all' ? undefined : departmentFilter;
+      const data = await getProblemStatementsForAdmin(filter);
       setStatements(data);
     } catch (error) {
       console.error('Failed to fetch statements:', error);
@@ -76,7 +85,7 @@ export default function ManageProblemStatementsPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, departmentFilter]);
 
   useEffect(() => {
     fetchStatements();
@@ -86,6 +95,7 @@ export default function ManageProblemStatementsPage() {
     setStatements(current => [...current, newStatement]);
     setIsCreateFormOpen(false);
     toast({ title: "Success", description: "New problem statement created." });
+    fetchStatements();
   }
 
   const openDeleteDialog = (statement: ProblemStatement) => {
@@ -141,8 +151,25 @@ export default function ManageProblemStatementsPage() {
       </div>
         <Card>
             <CardHeader>
-                <CardTitle>All Problem Statements</CardTitle>
-                <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
+                <div className="flex justify-between items-center">
+                    <div>
+                        <CardTitle>All Problem Statements</CardTitle>
+                        <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
+                    </div>
+                     <div className="w-[200px]">
+                        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                            <SelectTrigger>
+                                <SelectValue placeholder="Filter by department" />
+                            </SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="all">All Departments</SelectItem>
+                                {departments.map(dept => (
+                                    <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (
@@ -155,6 +182,7 @@ export default function ManageProblemStatementsPage() {
                     <TableHeader>
                         <TableRow>
                             <TableHead>Title</TableHead>
+                            <TableHead>Department</TableHead>
                             <TableHead>Assigned Faculty</TableHead>
                             <TableHead>Status</TableHead>
                             <TableHead><span className="sr-only">Actions</span></TableHead>
@@ -164,6 +192,7 @@ export default function ManageProblemStatementsPage() {
                         {statements.map(statement => (
                             <TableRow key={statement._id}>
                                 <TableCell className="font-medium">{statement.title}</TableCell>
+                                <TableCell>{statement.department}</TableCell>
                                 <TableCell>{getFacultyName(statement.facultyId)}</TableCell>
                                 <TableCell>
                                     <Badge variant={statement.isAssigned ? "secondary" : "default"}>

@@ -104,14 +104,14 @@ export default function BatchDashboard() {
         {batchDetails?.isLocked ? (
           <SelectedProjectView batch={batchDetails} />
         ) : (
-          <AvailableProjectsView onProjectSelected={handleProjectSelection} />
+          <AvailableProjectsView onProjectSelected={handleProjectSelection} batchDetails={batchDetails} />
         )}
       </div>
     </DashboardLayout>
   );
 }
 
-function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () => void }) {
+function AvailableProjectsView({ onProjectSelected, batchDetails }: { onProjectSelected: () => void, batchDetails: Batch }) {
     const [statements, setStatements] = useState<ProblemStatement[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
@@ -122,8 +122,15 @@ function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () =>
       async function fetchStatements() {
         try {
           setIsLoading(true);
-          const data = await getAvailableProblemStatementsForBatch();
-          setStatements(data);
+          // Only fetch statements if the student department is known
+          const studentDept = batchDetails?.students?.[0]?.dept;
+          if (studentDept) {
+            const data = await getAvailableProblemStatementsForBatch(studentDept);
+            setStatements(data);
+          } else {
+            // Fallback or show a message if department is not set
+            setStatements([]);
+          }
         } catch (error) {
           console.error("Failed to fetch problem statements:", error);
           toast({ variant: "destructive", title: "Failed to load projects", description: (error as Error).message });
@@ -132,7 +139,7 @@ function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () =>
         }
       }
       fetchStatements();
-    }, [toast]);
+    }, [toast, batchDetails]);
 
     const handleSelectClick = (ps: ProblemStatement) => {
         setSelectedStatement(ps);
@@ -172,12 +179,18 @@ function AvailableProjectsView({ onProjectSelected }: { onProjectSelected: () =>
     return (
         <>
             <div className="flex items-center">
-                <h1 className="text-lg font-semibold md:text-2xl">Available Projects</h1>
+                <h1 className="text-lg font-semibold md:text-2xl">Available Projects for {batchDetails.students[0].dept}</h1>
             </div>
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-4">
-            {statements.map((ps) => (
-              <ProblemStatementCard key={ps._id} ps={ps} onSelect={handleSelectClick} />
-            ))}
+            {statements.length > 0 ? (
+              statements.map((ps) => (
+                <ProblemStatementCard key={ps._id} ps={ps} onSelect={handleSelectClick} />
+              ))
+            ) : (
+              <div className="md:col-span-3 text-center text-muted-foreground">
+                No available projects found for your department at this time.
+              </div>
+            )}
           </div>
 
           <Dialog open={!!selectedStatement} onOpenChange={(isOpen) => !isOpen && setSelectedStatement(null)}>

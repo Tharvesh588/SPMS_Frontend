@@ -63,6 +63,14 @@ export default function FacultyDashboard() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
+            {facultyDetails && (
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Welcome, {facultyDetails.name}</CardTitle>
+                        <CardDescription>Department of {facultyDetails.department}</CardDescription>
+                    </CardHeader>
+                </Card>
+            )}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
               <StatCard title="My Uploaded PS" value={totalProblemStatements ?? '...'} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
               <StatCard title="My Quota" value={quotaValue} icon={<FolderKanban className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />

@@ -27,11 +27,15 @@ import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createProblemStatement, getFaculties, createProblemStatementAsFaculty } from '@/lib/api';
 import type { ProblemStatement, Faculty } from '@/types';
+import { departments, departmentValues } from '@/lib/constants';
 
 const formSchemaAsAdmin = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   gDriveLink: z.string().url('Must be a valid Google Drive link'),
+  department: z.string().refine((val) => departmentValues.includes(val), {
+    message: 'Please select a valid department',
+  }),
   facultyId: z.string().min(1, 'You must select a faculty'),
 });
 
@@ -81,7 +85,7 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
       title: '',
       description: '',
       gDriveLink: '',
-      ...(!isFacultyRole && { facultyId: '' }),
+      ...(!isFacultyRole && { facultyId: '', department: '' }),
     },
   });
 
@@ -169,28 +173,52 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
           )}
         />
         {!isFacultyRole && (
-        <FormField
-          control={form.control}
-          name="facultyId"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Faculty</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select a faculty to assign this to" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    {faculties.map(faculty => (
-                        <SelectItem key={faculty._id} value={faculty._id}>{faculty.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+          <>
+            <FormField
+              control={form.control}
+              name="department"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Department</FormLabel>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a department" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {departments.map((dept) => (
+                        <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="facultyId"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Faculty</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select a faculty to assign this to" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        {faculties.map(faculty => (
+                            <SelectItem key={faculty._id} value={faculty._id}>{faculty.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </>
         )}
         <Button type="submit" className="w-full" disabled={isLoading}>
           {isLoading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}

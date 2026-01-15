@@ -14,16 +14,27 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { createFaculty } from '@/lib/api';
 import type { Faculty } from '@/types';
+import { departments, departmentValues } from '@/lib/constants';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Faculty name is required'),
   email: z.string().email('Invalid email address'),
   password: z.string().min(6, 'Password must be at least 6 characters'),
+  department: z.string().refine((val) => departmentValues.includes(val), {
+    message: 'Please select a valid department',
+  }),
   quotaLimit: z.coerce.number().min(1, 'Quota must be at least 1'),
 });
 
@@ -40,6 +51,7 @@ export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) 
       name: '',
       email: '',
       password: '',
+      department: '',
       quotaLimit: 5,
     },
   });
@@ -51,6 +63,7 @@ export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) 
           name: values.name,
           email: values.email,
           password: values.password,
+          department: values.department,
           quotaLimit: values.quotaLimit,
       });
       toast({
@@ -110,6 +123,28 @@ export function CreateFacultyForm({ onFacultyCreated }: CreateFacultyFormProps) 
               <FormControl>
                 <Input type="password" placeholder="Enter a secure password" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Department</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a department" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}

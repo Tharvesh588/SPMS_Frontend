@@ -163,6 +163,7 @@ export default function ManageFacultyPage() {
                         <TableRow>
                             <TableHead>Name</TableHead>
                             <TableHead className="hidden md:table-cell">Email</TableHead>
+                            <TableHead>Department</TableHead>
                             <TableHead>Quota</TableHead>
                             <TableHead><span className="sr-only">Actions</span></TableHead>
                         </TableRow>
@@ -172,6 +173,7 @@ export default function ManageFacultyPage() {
                             <TableRow key={faculty._id}>
                                 <TableCell className="font-medium">{faculty.name}</TableCell>
                                 <TableCell className="hidden md:table-cell">{faculty.email}</TableCell>
+                                <TableCell>{faculty.department}</TableCell>
                                 <TableCell>
                                     <Badge variant={faculty.quotaUsed >= faculty.quotaLimit ? "destructive" : "secondary"}>
                                         {faculty.quotaUsed} / {faculty.quotaLimit}

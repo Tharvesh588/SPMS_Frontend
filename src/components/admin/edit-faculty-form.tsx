@@ -14,15 +14,26 @@ import {
   FormLabel,
   FormMessage,
 } from '@/components/ui/form';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { useState } from 'react';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { updateFaculty } from '@/lib/api';
 import type { Faculty } from '@/types';
+import { departments, departmentValues } from '@/lib/constants';
 
 const formSchema = z.object({
   name: z.string().min(1, 'Faculty name is required'),
   email: z.string().email('Invalid email address'),
+  department: z.string().refine((val) => departmentValues.includes(val), {
+    message: 'Please select a valid department',
+  }),
   quotaLimit: z.coerce.number().min(0, 'Quota must be 0 or more'),
 });
 
@@ -39,6 +50,7 @@ export function EditFacultyForm({ faculty, onFacultyUpdated }: EditFacultyFormPr
     defaultValues: {
       name: faculty.name,
       email: faculty.email,
+      department: faculty.department,
       quotaLimit: faculty.quotaLimit,
     },
   });
@@ -96,6 +108,28 @@ export function EditFacultyForm({ faculty, onFacultyUpdated }: EditFacultyFormPr
         />
         <FormField
           control={form.control}
+          name="department"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Department</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select a department" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {departments.map((dept) => (
+                    <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
           name="quotaLimit"
           render={({ field }) => (
             <FormItem>
@@ -115,4 +149,3 @@ export function EditFacultyForm({ faculty, onFacultyUpdated }: EditFacultyFormPr
     </Form>
   );
 }
-

@@ -109,6 +109,7 @@ type CreateFacultyData = {
     name: string;
     email: string;
     password: string;
+    department: string;
     quotaLimit: number;
 };
 
@@ -122,6 +123,7 @@ export async function createFaculty(facultyData: CreateFacultyData): Promise<{su
 type UpdateFacultyData = {
     name?: string;
     email?: string;
+    department?: string;
     quotaLimit?: number;
 };
 export async function updateFaculty(id: string, facultyData: UpdateFacultyData): Promise<{success: boolean, faculty: Faculty}> {
@@ -200,18 +202,20 @@ export async function getUnassignedProblemStatements(): Promise<ProblemStatement
     return response.problemStatements;
 }
 
-export async function getProblemStatementsForAdmin(): Promise<ProblemStatement[]> {
+export async function getProblemStatementsForAdmin(department?: string): Promise<ProblemStatement[]> {
+  const url = department ? `/admin/problem-statements?department=${department}` : "/admin/problem-statements";
   const response = await fetcher<{
     success: boolean;
     count: number;
     problemStatements: ProblemStatement[];
-  }>("/admin/problem-statements");
+  }>(url);
   return response.problemStatements;
 }
 
 type AdminCreateProblemStatementData = {
     title: string;
     description: string;
+    department: string;
     gDriveLink: string;
     facultyId: string;
 };
@@ -235,6 +239,7 @@ export type FacultyDashboardData = {
     facultyDetails: {
         name: string;
         email: string;
+        department: string;
         quotaLimit: number;
         quotaUsed: number;
     };
@@ -279,8 +284,9 @@ export async function deleteProblemStatementAsFaculty(id: string): Promise<void>
 
 // Batch Endpoints
 
-export async function getAvailableProblemStatementsForBatch(): Promise<ProblemStatement[]> {
-    const response = await fetcher<{success: boolean, ps: ProblemStatement[]}>('/batch/problem-statements');
+export async function getAvailableProblemStatementsForBatch(department?: string): Promise<ProblemStatement[]> {
+    const url = department ? `/batch/problem-statements?department=${department}` : '/batch/problem-statements';
+    const response = await fetcher<{success: boolean, ps: ProblemStatement[]}>(url);
     return response.ps;
 }
 

@@ -3,6 +3,7 @@ export type Faculty = {
   _id: string;
   name: string;
   email: string;
+  department: string;
   quotaLimit: number;
   quotaUsed: number;
   createdAt: string;
@@ -35,6 +36,7 @@ export type ProblemStatement = {
   _id: string;
   title: string;
   description: string;
+  department: string;
   gDriveLink: string;
   facultyId: Faculty | string;
   uploadedBy: 'admin' | 'faculty';
