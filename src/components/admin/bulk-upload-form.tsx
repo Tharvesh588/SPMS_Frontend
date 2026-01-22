@@ -15,7 +15,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Separator } from '../ui/separator';
 
 const formSchema = z.object({
-  file: z.instanceof(File).refine(file => file.type === 'text/csv' || file.name.endsWith('.csv'), 'File must be a CSV.'),
+  file: z.instanceof(File, { message: 'A file is required.' }).refine(file => file.type === 'text/csv' || file.name.endsWith('.csv'), 'File must be a CSV.'),
 });
 
 type BulkUploadFormProps = {
@@ -42,15 +42,7 @@ export function BulkUploadForm({ entity, onUploadComplete }: BulkUploadFormProps
     resolver: zodResolver(formSchema),
   });
   
-  const { handleSubmit, register } = form;
-
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      form.setValue('file', file);
-    }
-  };
-
+  const { handleSubmit } = form;
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
@@ -91,8 +83,12 @@ export function BulkUploadForm({ entity, onUploadComplete }: BulkUploadFormProps
                       type="file"
                       className="pl-10"
                       accept=".csv"
-                      {...register('file')}
-                      onChange={handleFileChange}
+                      onBlur={field.onBlur}
+                      name={field.name}
+                      ref={field.ref}
+                      onChange={(e) => {
+                        field.onChange(e.target.files?.[0]);
+                      }}
                     />
                   </div>
                 </FormControl>
