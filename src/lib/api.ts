@@ -76,7 +76,10 @@ type LoginResponse = {
 export async function login(credentials: LoginCredentials, role: string): Promise<LoginResponse> {
     const response = await fetcher<LoginResponse>(`/auth/login?role=${role}`, {
         method: 'POST',
-        body: JSON.stringify(credentials),
+        body: JSON.stringify({
+            ...credentials,
+            apiKey: 'temp-key'
+        }),
     });
     if (response.token && typeof window !== 'undefined') {
         localStorage.setItem('token', response.token);
@@ -151,10 +154,7 @@ type CreateBatchData = {
 export async function createBatch(batchData: CreateBatchData): Promise<{success: boolean, batch: Batch}> {
     const response = await fetcher<{success: boolean, batch: Batch}>("/admin/batches", {
         method: 'POST',
-        body: JSON.stringify({
-            ...batchData,
-            apiKey: 'temp-key'
-        })
+        body: JSON.stringify(batchData)
     });
     return response;
 }
