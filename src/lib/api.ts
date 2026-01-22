@@ -17,7 +17,6 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         if (token) {
             headers['Authorization'] = `Bearer ${token}`;
         } else {
-            // Immediately throw an error if a protected route is accessed without a token.
             throw new Error("Not authorized for this role.");
         }
     }
@@ -315,11 +314,17 @@ export async function bulkUpload(
         body: formData,
     });
 
-    const result = await response.json();
-
     if (!response.ok) {
-        throw new Error(result.message || `Upload failed with status: ${response.status}`);
+        let errorMessage = `Upload failed with status: ${response.status}`;
+        try {
+            const errorResult = await response.json();
+            errorMessage = errorResult.message || errorMessage;
+        } catch (e) {
+            // The error response was not JSON, so we just use the status code.
+        }
+        throw new Error(errorMessage);
     }
 
+    const result = await response.json();
     return result;
 }
