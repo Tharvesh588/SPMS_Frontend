@@ -31,11 +31,6 @@ export default function LoginPage() {
                     </p>
                 </div>
                 <LoginForm />
-                <div className="mt-4 text-center text-sm">
-                  <Link href="/" className="underline">
-                      Back to Home
-                  </Link>
-                </div>
             </div>
         </div>
     </div>

@@ -4,6 +4,15 @@ import type {NextConfig} from 'next';
 // Forcing a HMR refresh to fix a development server issue.
 const nextConfig: NextConfig = {
   /* config options here */
+  async redirects() {
+    return [
+      {
+        source: '/',
+        destination: '/u/portal/auth',
+        permanent: true,
+      },
+    ]
+  },
   typescript: {
     ignoreBuildErrors: true,
   },

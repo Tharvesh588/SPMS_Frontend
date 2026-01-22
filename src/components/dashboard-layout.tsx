@@ -33,6 +33,7 @@ type DashboardLayoutProps = {
 export function DashboardLayout({ children, sidebarContent, userRole }: DashboardLayoutProps) {
   const router = useRouter();
   const isMobile = useIsMobile();
+  const dashboardHomeUrl = `/u/portal/${userRole}?page=dashboard`;
 
   const handleLogout = () => {
     if(typeof window !== 'undefined') {
@@ -86,7 +87,7 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
                 <SheetContent side="left">
                     <div className="flex h-full max-h-screen flex-col gap-2">
                         <div className="flex h-14 items-center border-b px-4 lg:h-[60px] lg:px-6">
-                            <Logo />
+                            <Logo href={dashboardHomeUrl} />
                         </div>
                         <div className="flex-1 overflow-auto py-2">
                             {sidebarContent}
@@ -114,7 +115,7 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
       <div className="grid min-h-screen w-full md:grid-cols-[220px_1fr] lg:grid-cols-[280px_1fr]">
         <Sidebar>
             <SidebarHeader>
-              <Logo />
+              <Logo href={dashboardHomeUrl} />
             </SidebarHeader>
             <SidebarContent>{sidebarContent}</SidebarContent>
             <SidebarFooter>
