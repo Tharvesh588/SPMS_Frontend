@@ -18,7 +18,6 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
             headers['Authorization'] = `Bearer ${token}`;
         } else {
             // Immediately throw an error if a protected route is accessed without a token.
-            // This prevents the API call from even being made.
             throw new Error("Not authorized for this role.");
         }
     }
@@ -47,7 +46,6 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
             errMessage = response.statusText || 'Failed to fetch from API';
         }
         
-        // This is where the backend error message "Not authorized for this role" gets thrown
         throw new Error(errMessage);
     }
     
@@ -294,4 +292,34 @@ export async function saveStudentsForBatch(batchId: string, students: Student[])
 
 export async function generateBatchReport(batchId: string): Promise<{success: boolean, report: any}> {
     return fetcher(`/batch/${batchId}/report`);
+}
+
+// Bulk Upload
+export async function bulkUpload(
+  entity: 'faculty' | 'batch' | 'problem-statements',
+  file: File
+): Promise<any> {
+    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    if (!token) {
+        throw new Error("Not authorized for this role.");
+    }
+    
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/${entity}/bulk-upload`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`,
+        },
+        body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+        throw new Error(result.message || `Upload failed with status: ${response.status}`);
+    }
+
+    return result;
 }

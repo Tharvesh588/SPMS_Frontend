@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, UserPlus, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, UserPlus, Loader2, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import {
   DropdownMenu,
@@ -18,10 +18,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { getBatches, deleteBatch } from '@/lib/api';
 import type { Batch, ProblemStatement, Faculty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { EditBatchForm } from '@/components/admin/edit-batch-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import { BulkUploadForm } from '@/components/admin/bulk-upload-form';
 
 
 const AdminSidebar = () => (
@@ -59,6 +60,7 @@ export default function ManageBatchesPage() {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<Batch | null>(null);
   const { toast } = useToast();
 
@@ -130,11 +132,33 @@ export default function ManageBatchesPage() {
     return 'Not Selected';
   }
 
+  const handleUploadComplete = () => {
+    setIsBulkUploadOpen(false);
+    fetchBatches(); // Refresh the list
+  }
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl">Manage Batches</h1>
             <div className="ml-auto flex items-center gap-2">
+                <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Bulk Upload
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Bulk Upload Batches</DialogTitle>
+                            <DialogDescription>
+                                Upload a CSV file with batch data. The required columns are: batchName, username, password.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BulkUploadForm entity="batch" onUploadComplete={handleUploadComplete} />
+                    </DialogContent>
+                </Dialog>
                 <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                 <DialogTrigger asChild>
                     <Button>

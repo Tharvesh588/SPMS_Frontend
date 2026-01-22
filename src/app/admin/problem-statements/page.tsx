@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, PlusCircle, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, PlusCircle, Loader2, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -24,12 +24,13 @@ import {
 } from '@/components/ui/select';
 import { useCallback, useEffect, useState } from 'react';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
 import { getProblemStatementsForAdmin, deleteProblemStatement } from '@/lib/api';
 import type { ProblemStatement, Faculty } from '@/types';
 import { departments } from '@/lib/constants';
+import { BulkUploadForm } from '@/components/admin/bulk-upload-form';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -65,6 +66,7 @@ export default function ManageProblemStatementsPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
   const { toast } = useToast();
@@ -128,11 +130,33 @@ export default function ManageProblemStatementsPage() {
     return 'N/A';
   }
 
+  const handleUploadComplete = () => {
+    setIsBulkUploadOpen(false);
+    fetchStatements();
+  }
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
       <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl">Problem Statements</h1>
             <div className="ml-auto flex items-center gap-2">
+                 <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Bulk Upload
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Bulk Upload Problem Statements</DialogTitle>
+                            <DialogDescription>
+                                Upload a CSV file. Required columns: title, description, gDriveLink, facultyEmail, department.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BulkUploadForm entity="problem-statements" onUploadComplete={handleUploadComplete} />
+                    </DialogContent>
+                </Dialog>
                  <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                   <DialogTrigger asChild>
                     <Button>

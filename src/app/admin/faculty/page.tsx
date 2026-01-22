@@ -5,7 +5,7 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, UserPlus, Loader2 } from 'lucide-react';
+import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, UserPlus, Loader2, Upload } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -19,10 +19,11 @@ import { useCallback, useEffect, useState } from 'react';
 import { getFaculties, deleteFaculty } from '@/lib/api';
 import type { Faculty } from '@/types';
 import { useToast } from '@/hooks/use-toast';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogDescription } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { EditFacultyForm } from '@/components/admin/edit-faculty-form';
 import { ConfirmDeleteDialog } from '@/components/confirm-delete-dialog';
+import { BulkUploadForm } from '@/components/admin/bulk-upload-form';
 
 
 const AdminSidebar = () => (
@@ -60,6 +61,7 @@ export default function ManageFacultyPage() {
   const [isCreateFormOpen, setIsCreateFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [selectedFaculty, setSelectedFaculty] = useState<Faculty | null>(null);
   const { toast } = useToast();
 
@@ -124,12 +126,34 @@ export default function ManageFacultyPage() {
     }
   }
 
+  const handleUploadComplete = () => {
+    setIsBulkUploadOpen(false);
+    fetchFaculties(); // Refresh the list
+  }
+
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
         <div className="flex items-center">
             <h1 className="text-lg font-semibold md:text-2xl">Manage Faculty</h1>
             <div className="ml-auto flex items-center gap-2">
+                <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+                    <DialogTrigger asChild>
+                        <Button variant="outline">
+                            <Upload className="mr-2 h-4 w-4" />
+                            Bulk Upload
+                        </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                        <DialogHeader>
+                            <DialogTitle>Bulk Upload Faculty</DialogTitle>
+                            <DialogDescription>
+                                Upload a CSV file with faculty data. The required columns are: name, email, password, department, quotaLimit.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <BulkUploadForm entity="faculty" onUploadComplete={handleUploadComplete} />
+                    </DialogContent>
+                </Dialog>
                 <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
                 <DialogTrigger asChild>
                     <Button>
