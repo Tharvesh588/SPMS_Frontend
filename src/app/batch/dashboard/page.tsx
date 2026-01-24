@@ -6,7 +6,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon, Download, User } from 'lucide-react';
-import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport } from '@/lib/api';
+import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport, getDomainsByDepartment, getProblemStatementsByDomain } from '@/lib/api';
 import type { ProblemStatement, Batch, Faculty } from '@/types';
 import { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -54,11 +54,11 @@ export default function BatchDashboard() {
       setIsLoading(false);
     }
   }, [toast]);
-  
+
   useEffect(() => {
     fetchDetails();
   }, [fetchDetails]);
-  
+
   const handleStudentsSaved = () => {
     fetchDetails();
     toast({ title: 'Student Details Saved', description: 'You can now select a project.' });
@@ -83,17 +83,17 @@ export default function BatchDashboard() {
 
   if (!batchDetails) {
     return (
-       <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
-         <div className="text-center">Could not load batch details.</div>
-       </DashboardLayout>
+      <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
+        <div className="text-center">Could not load batch details.</div>
+      </DashboardLayout>
     )
   }
 
   if (batchDetails.students.length === 0) {
     return (
-       <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
-          <SaveStudentsForm onStudentsSaved={handleStudentsSaved} />
-       </DashboardLayout>
+      <DashboardLayout userRole="Batch" sidebarContent={<BatchSidebar />}>
+        <SaveStudentsForm onStudentsSaved={handleStudentsSaved} />
+      </DashboardLayout>
     )
   }
 
@@ -112,211 +112,305 @@ export default function BatchDashboard() {
 }
 
 function AvailableProjectsView({ onProjectSelected, batchDetails }: { onProjectSelected: () => void, batchDetails: Batch }) {
-    const [statements, setStatements] = useState<ProblemStatement[]>([]);
-    const [isLoading, setIsLoading] = useState(true);
-    const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
-    const [isConfirming, setIsConfirming] = useState(false);
-    const { toast } = useToast();
+  const [statements, setStatements] = useState<ProblemStatement[]>([]);
+  const [availableDomains, setAvailableDomains] = useState<string[]>([]);
+  const [selectedDomain, setSelectedDomain] = useState<string | null>(null);
+  const [isLoadingDomains, setIsLoadingDomains] = useState(true);
+  const [isLoadingPS, setIsLoadingPS] = useState(false);
+  const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
+  const [isConfirming, setIsConfirming] = useState(false);
+  const { toast } = useToast();
 
-    useEffect(() => {
-      async function fetchStatements() {
-        try {
-          setIsLoading(true);
-          // Only fetch statements if the student department is known
-          const studentDept = batchDetails?.students?.[0]?.dept;
-          if (studentDept) {
-            const data = await getAvailableProblemStatementsForBatch(studentDept);
-            setStatements(data);
-          } else {
-            // Fallback or show a message if department is not set
-            setStatements([]);
-          }
-        } catch (error) {
-          console.error("Failed to fetch problem statements:", error);
-          toast({ variant: "destructive", title: "Failed to load projects", description: (error as Error).message });
-        } finally {
-          setIsLoading(false);
-        }
+  const studentDept = batchDetails?.students?.[0]?.dept;
+
+  // Fetch available domains on mount
+  useEffect(() => {
+    async function fetchDomains() {
+      if (!studentDept) {
+        setIsLoadingDomains(false);
+        return;
       }
-      fetchStatements();
-    }, [toast, batchDetails]);
 
-    const handleSelectClick = (ps: ProblemStatement) => {
-        setSelectedStatement(ps);
+      try {
+        setIsLoadingDomains(true);
+        const { domains } = await getDomainsByDepartment(studentDept);
+        setAvailableDomains(domains);
+      } catch (error) {
+        console.error("Failed to fetch domains:", error);
+        toast({ variant: "destructive", title: "Failed to load domains", description: (error as Error).message });
+      } finally {
+        setIsLoadingDomains(false);
+      }
+    }
+    fetchDomains();
+  }, [studentDept, toast]);
+
+  // Fetch PS when domain is selected
+  useEffect(() => {
+    async function fetchStatements() {
+      if (!selectedDomain || !studentDept) return;
+
+      try {
+        setIsLoadingPS(true);
+        const data = await getProblemStatementsByDomain(studentDept, selectedDomain);
+        setStatements(data);
+      } catch (error) {
+        console.error("Failed to fetch problem statements:", error);
+        toast({ variant: "destructive", title: "Failed to load projects", description: (error as Error).message });
+      } finally {
+        setIsLoadingPS(false);
+      }
+    }
+    fetchStatements();
+  }, [selectedDomain, studentDept, toast]);
+
+  const handleSelectClick = (ps: ProblemStatement) => {
+    setSelectedStatement(ps);
+  }
+
+  const handleConfirmSelection = async () => {
+    const batchId = localStorage.getItem('userId');
+    if (!selectedStatement || !batchId) {
+      toast({ variant: 'destructive', title: 'Error', description: 'No statement or batch ID found.' });
+      return;
     }
 
-    const handleConfirmSelection = async () => {
-        const batchId = localStorage.getItem('userId');
-        if (!selectedStatement || !batchId) {
-            toast({ variant: 'destructive', title: 'Error', description: 'No statement or batch ID found.' });
-            return;
-        }
-
-        setIsConfirming(true);
-        try {
-            await chooseProblemStatement(batchId, selectedStatement._id);
-            toast({ title: 'Project Selected!', description: `You have successfully chosen "${selectedStatement.title}".` });
-            setSelectedStatement(null);
-            onProjectSelected(); // Callback to refresh dashboard
-        } catch (error) {
-            console.error("Failed to select project:", error);
-            toast({ variant: 'destructive', title: 'Selection Failed', description: (error as Error).message });
-        } finally {
-            setIsConfirming(false);
-        }
+    setIsConfirming(true);
+    try {
+      await chooseProblemStatement(batchId, selectedStatement._id);
+      toast({ title: 'Project Selected!', description: `You have successfully chosen "${selectedStatement.title}".` });
+      setSelectedStatement(null);
+      onProjectSelected(); // Callback to refresh dashboard
+    } catch (error) {
+      console.error("Failed to select project:", error);
+      toast({ variant: 'destructive', title: 'Selection Failed', description: (error as Error).message });
+    } finally {
+      setIsConfirming(false);
     }
+  }
 
-
-    if (isLoading) {
-        return (
-            <div className="flex justify-center items-center h-64">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                <span className="ml-4 text-muted-foreground">Loading Available Projects...</span>
-            </div>
-        )
-    }
-
+  // Loading state for domains
+  if (isLoadingDomains) {
     return (
-        <>
-            <div className="flex items-center">
-                <h1 className="text-lg font-semibold md:text-2xl">Available Projects for {batchDetails.students[0].dept}</h1>
-            </div>
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mt-4">
-            {statements.length > 0 ? (
-              statements.map((ps) => (
-                <ProblemStatementCard key={ps._id} ps={ps} onSelect={handleSelectClick} />
-              ))
-            ) : (
-              <div className="md:col-span-3 text-center text-muted-foreground">
-                No available projects found for your department at this time.
-              </div>
-            )}
-          </div>
-
-          <Dialog open={!!selectedStatement} onOpenChange={(isOpen) => !isOpen && setSelectedStatement(null)}>
-              <DialogContent>
-                  <DialogHeader>
-                      <DialogTitle className="text-2xl font-headline">{selectedStatement?.title}</DialogTitle>
-                      <DialogDescription>Review the details below. This action is final.</DialogDescription>
-                  </DialogHeader>
-                  <div className="py-4 space-y-4">
-                      <p className="text-sm text-muted-foreground">{selectedStatement?.description}</p>
-                      <Button asChild variant="outline">
-                        <a href={selectedStatement?.gDriveLink} target="_blank" rel="noopener noreferrer">
-                            <LinkIcon className="mr-2 h-4 w-4" />
-                            View Google Drive
-                        </a>
-                      </Button>
-                  </div>
-                  <DialogFooter>
-                      <Button variant="ghost" onClick={() => setSelectedStatement(null)} disabled={isConfirming}>Cancel</Button>
-                      <Button onClick={handleConfirmSelection} disabled={isConfirming}>
-                          {isConfirming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                          Confirm Selection
-                      </Button>
-                  </DialogFooter>
-              </DialogContent>
-          </Dialog>
-        </>
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-4 text-muted-foreground">Loading Available Domains...</span>
+      </div>
     )
+  }
+
+  // Domain selection view
+  if (!selectedDomain) {
+    return (
+      <>
+        <div className="flex items-center justify-between">
+          <h1 className="text-lg font-semibold md:text-2xl">Choose Your Domain</h1>
+          <Badge variant="outline">{studentDept} Department</Badge>
+        </div>
+        <p className="text-muted-foreground mb-6">
+          Select a domain to view available projects. This will filter projects based on your area of interest.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          {availableDomains.length > 0 ? (
+            availableDomains.map((domain) => (
+              <Card
+                key={domain}
+                className="cursor-pointer hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-primary"
+                onClick={() => setSelectedDomain(domain)}
+              >
+                <CardHeader>
+                  <CardTitle className="flex items-center justify-between">
+                    <span className="text-lg">{domain}</span>
+                    <ArrowRight className="h-5 w-5 text-muted-foreground" />
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm text-muted-foreground">
+                    Click to view available projects in this domain
+                  </p>
+                </CardContent>
+              </Card>
+            ))
+          ) : (
+            <div className="md:col-span-3 text-center text-muted-foreground py-12">
+              <Files className="h-12 w-12 mx-auto mb-4 opacity-50" />
+              <p>No domains available for your department at this time.</p>
+            </div>
+          )}
+        </div>
+      </>
+    )
+  }
+
+  // PS list view (domain selected)
+  if (isLoadingPS) {
+    return (
+      <div className="flex justify-center items-center h-64">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+        <span className="ml-4 text-muted-foreground">Loading Projects...</span>
+      </div>
+    )
+  }
+
+  return (
+    <>
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h1 className="text-lg font-semibold md:text-2xl">Available Projects</h1>
+          <div className="flex items-center gap-2 mt-2">
+            <Badge variant="secondary">{studentDept}</Badge>
+            <span className="text-muted-foreground">→</span>
+            <Badge>{selectedDomain}</Badge>
+          </div>
+        </div>
+        <Button variant="outline" onClick={() => setSelectedDomain(null)}>
+          ← Back to Domains
+        </Button>
+      </div>
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+        {statements.length > 0 ? (
+          statements.map((ps) => (
+            <ProblemStatementCard key={ps._id} ps={ps} onSelect={handleSelectClick} />
+          ))
+        ) : (
+          <div className="md:col-span-3 text-center text-muted-foreground py-12">
+            <Files className="h-12 w-12 mx-auto mb-4 opacity-50" />
+            <p>No available projects found in this domain.</p>
+            <Button variant="link" onClick={() => setSelectedDomain(null)} className="mt-4">
+              Try another domain
+            </Button>
+          </div>
+        )}
+      </div>
+
+      <Dialog open={!!selectedStatement} onOpenChange={(isOpen) => !isOpen && setSelectedStatement(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-headline">{selectedStatement?.title}</DialogTitle>
+            <DialogDescription>Review the details below. This action is final.</DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="flex gap-2">
+              <Badge variant="secondary">{selectedStatement?.department}</Badge>
+              <Badge>{selectedStatement?.domain}</Badge>
+            </div>
+            <p className="text-sm text-muted-foreground">{selectedStatement?.description}</p>
+            <Button asChild variant="outline">
+              <a href={selectedStatement?.gDriveLink} target="_blank" rel="noopener noreferrer">
+                <LinkIcon className="mr-2 h-4 w-4" />
+                View Google Drive
+              </a>
+            </Button>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setSelectedStatement(null)} disabled={isConfirming}>Cancel</Button>
+            <Button onClick={handleConfirmSelection} disabled={isConfirming}>
+              {isConfirming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              Confirm Selection
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </>
+  )
 }
 
 function SelectedProjectView({ batch }: { batch: Batch }) {
-    const project = batch.projectId as ProblemStatement;
-    const coordinator = batch.coordinatorId as Faculty;
-    const { toast } = useToast();
-    const [isDownloading, setIsDownloading] = useState(false);
+  const project = batch.projectId as ProblemStatement;
+  const coordinator = batch.coordinatorId as Faculty;
+  const { toast } = useToast();
+  const [isDownloading, setIsDownloading] = useState(false);
 
-    const handleDownloadReport = async () => {
-        const batchId = localStorage.getItem('userId');
-        if (!batchId) return;
+  const handleDownloadReport = async () => {
+    const batchId = localStorage.getItem('userId');
+    if (!batchId) return;
 
-        setIsDownloading(true);
-        try {
-            const { report } = await generateBatchReport(batchId);
-            
-            const reportContent = `
+    setIsDownloading(true);
+    try {
+      const { report } = await generateBatchReport(batchId);
+
+      const reportContent = `
 Batch Name: ${report.batchName}
 Department: ${report.department}
 Project: ${report.project}
 
 Students:
-${report.students.map((s: any, i: number) => `  ${i+1}. ${s.nameInitial} (${s.rollNumber})`).join('\n')}
+${report.students.map((s: any, i: number) => `  ${i + 1}. ${s.nameInitial} (${s.rollNumber})`).join('\n')}
             `;
 
-            const blob = new Blob([reportContent.trim()], { type: 'text/plain' });
-            const url = window.URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            a.href = url;
-            a.download = `report-${report.batchName.replace(/\s+/g, '-')}.txt`;
-            document.body.appendChild(a);
-            a.click();
-            a.remove();
-            window.URL.revokeObjectURL(url);
+      const blob = new Blob([reportContent.trim()], { type: 'text/plain' });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `report-${report.batchName.replace(/\s+/g, '-')}.txt`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.URL.revokeObjectURL(url);
 
-            toast({ title: 'Report Downloaded', description: 'The report has been saved to your device.' });
-        } catch (error) {
-            console.error("Failed to generate report:", error);
-            toast({ variant: 'destructive', title: 'Download Failed', description: (error as Error).message });
-        } finally {
-            setIsDownloading(false);
-        }
-    };
-    
-    if (!project || !coordinator) {
-        return (
-             <div className="text-center py-10">
-                <h2 className="text-2xl font-bold">Loading Project Details...</h2>
-                <p className="text-muted-foreground">Please wait a moment.</p>
-            </div>
-        )
+      toast({ title: 'Report Downloaded', description: 'The report has been saved to your device.' });
+    } catch (error) {
+      console.error("Failed to generate report:", error);
+      toast({ variant: 'destructive', title: 'Download Failed', description: (error as Error).message });
+    } finally {
+      setIsDownloading(false);
     }
+  };
+
+  if (!project || !coordinator) {
+    return (
+      <div className="text-center py-10">
+        <h2 className="text-2xl font-bold">Loading Project Details...</h2>
+        <p className="text-muted-foreground">Please wait a moment.</p>
+      </div>
+    )
+  }
 
   return (
     <div>
-        <div className="bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-8" role="alert">
-            <div className="flex">
-                <div className="py-1"><CheckCircle className="h-6 w-6 text-green-500 mr-4" /></div>
-                <div>
-                    <p className="font-bold">Project Selected!</p>
-                    <p className="text-sm">You have successfully selected your final year project. You cannot change this selection.</p>
-                </div>
-            </div>
+      <div className="bg-green-100 dark:bg-green-900/20 border-l-4 border-green-500 text-green-700 dark:text-green-300 p-4 rounded-md mb-8" role="alert">
+        <div className="flex">
+          <div className="py-1"><CheckCircle className="h-6 w-6 text-green-500 mr-4" /></div>
+          <div>
+            <p className="font-bold">Project Selected!</p>
+            <p className="text-sm">You have successfully selected your final year project. You cannot change this selection.</p>
+          </div>
         </div>
+      </div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-lg font-semibold md:text-2xl">My Project</h1>
         <Button onClick={handleDownloadReport} disabled={isDownloading}>
-            {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
-            Download Report
+          {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
+          Download Report
         </Button>
       </div>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
-            <Card>
-                <CardHeader>
-                    <CardTitle className="text-2xl">{project.title}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-muted-foreground mb-6">{project.description}</p>
-                </CardContent>
-                 <CardFooter>
-                    <Button asChild variant="link" className="px-0">
-                        <a href={project.gDriveLink} target="_blank" rel="noopener noreferrer">View Google Drive Link</a>
-                    </Button>
-                </CardFooter>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-2xl">{project.title}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground mb-6">{project.description}</p>
+            </CardContent>
+            <CardFooter>
+              <Button asChild variant="link" className="px-0">
+                <a href={project.gDriveLink} target="_blank" rel="noopener noreferrer">View Google Drive Link</a>
+              </Button>
+            </CardFooter>
+          </Card>
         </div>
         <div>
-            <Card>
-                <CardHeader>
-                    <CardTitle>Project Coordinator</CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <p className="text-lg font-semibold">{coordinator.name}</p>
-                    <p className="text-sm text-muted-foreground">{coordinator.email}</p>
-                     <p className="text-sm text-muted-foreground mt-4">Contact your coordinator for further guidance.</p>
-                </CardContent>
-            </Card>
+          <Card>
+            <CardHeader>
+              <CardTitle>Project Coordinator</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-lg font-semibold">{coordinator.name}</p>
+              <p className="text-sm text-muted-foreground">{coordinator.email}</p>
+              <p className="text-sm text-muted-foreground mt-4">Contact your coordinator for further guidance.</p>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
@@ -327,9 +421,12 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect
   return (
     <Card className="flex flex-col h-full hover:shadow-lg transition-shadow duration-300 border-2 border-transparent hover:border-primary">
       <CardHeader>
-        <CardTitle className="line-clamp-2">{ps.title}</CardTitle>
-         <CardDescription>
-            Faculty: {typeof ps.facultyId === 'object' ? ps.facultyId.name : 'N/A'}
+        <div className="flex items-start justify-between gap-2 mb-2">
+          <CardTitle className="line-clamp-2 flex-1">{ps.title}</CardTitle>
+          <Badge variant="secondary" className="shrink-0">{ps.domain}</Badge>
+        </div>
+        <CardDescription>
+          Faculty: {typeof ps.facultyId === 'object' ? ps.facultyId.name : 'N/A'}
         </CardDescription>
       </CardHeader>
       <CardContent className="flex-grow">

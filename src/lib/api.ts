@@ -30,7 +30,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         if (options.method === 'DELETE' && (response.status === 200 || response.status === 204)) {
             return {} as T;
         }
-        
+
         const contentType = response.headers.get("content-type");
         let errMessage = `Request failed with status: ${response.status}`;
 
@@ -44,24 +44,24 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
         } else {
             errMessage = response.statusText || 'Failed to fetch from API';
         }
-        
+
         throw new Error(errMessage);
     }
-    
+
     const contentType = response.headers.get("content-type");
     if (contentType && contentType.indexOf("application/json") !== -1) {
         return response.json();
     }
-    
+
     return {} as T;
 }
 
 
 // Auth
 type LoginCredentials = {
-  email?: string;
-  username?: string;
-  password?: string;
+    email?: string;
+    username?: string;
+    password?: string;
 };
 
 type LoginResponse = {
@@ -90,12 +90,12 @@ export async function login(credentials: LoginCredentials, role: string): Promis
 
 // Admin - Faculty
 export async function getFaculties(): Promise<Faculty[]> {
-  const response = await fetcher<{
-    success: boolean;
-    count: number;
-    faculties: Faculty[];
-  }>("/admin/faculties");
-  return response.faculties;
+    const response = await fetcher<{
+        success: boolean;
+        count: number;
+        faculties: Faculty[];
+    }>("/admin/faculties");
+    return response.faculties;
 }
 
 type CreateFacultyData = {
@@ -106,7 +106,7 @@ type CreateFacultyData = {
     quotaLimit: number;
 };
 
-export async function createFaculty(facultyData: CreateFacultyData): Promise<{success: boolean, faculty: Faculty}> {
+export async function createFaculty(facultyData: CreateFacultyData): Promise<{ success: boolean, faculty: Faculty }> {
     return fetcher("/admin/faculties", {
         method: 'POST',
         body: JSON.stringify(facultyData)
@@ -119,7 +119,7 @@ type UpdateFacultyData = {
     department?: string;
     quotaLimit?: number;
 };
-export async function updateFaculty(id: string, facultyData: UpdateFacultyData): Promise<{success: boolean, faculty: Faculty}> {
+export async function updateFaculty(id: string, facultyData: UpdateFacultyData): Promise<{ success: boolean, faculty: Faculty }> {
     return fetcher(`/admin/faculties/${id}`, {
         method: 'PUT',
         body: JSON.stringify(facultyData)
@@ -134,7 +134,7 @@ export async function deleteFaculty(id: string): Promise<void> {
 
 
 // Admin - Batches
-export async function getBatchDetailsAsAdmin(batchId: string): Promise<{success: boolean, batch: Batch}> {
+export async function getBatchDetailsAsAdmin(batchId: string): Promise<{ success: boolean, batch: Batch }> {
     return fetcher(`/admin/batches/${batchId}`);
 }
 
@@ -150,8 +150,8 @@ type CreateBatchData = {
     password: string;
 };
 
-export async function createBatch(batchData: CreateBatchData): Promise<{success: boolean, batch: Batch}> {
-    const response = await fetcher<{success: boolean, batch: Batch}>("/admin/batches", {
+export async function createBatch(batchData: CreateBatchData): Promise<{ success: boolean, batch: Batch }> {
+    const response = await fetcher<{ success: boolean, batch: Batch }>("/admin/batches", {
         method: 'POST',
         body: JSON.stringify(batchData)
     });
@@ -163,7 +163,7 @@ type UpdateBatchData = {
     username?: string;
 };
 
-export async function updateBatch(id: string, batchData: UpdateBatchData): Promise<{success: boolean, batch: Batch}> {
+export async function updateBatch(id: string, batchData: UpdateBatchData): Promise<{ success: boolean, batch: Batch }> {
     return fetcher(`/admin/batches/${id}`, {
         method: 'PUT',
         body: JSON.stringify(batchData)
@@ -184,24 +184,25 @@ export async function getUnassignedProblemStatements(): Promise<ProblemStatement
 }
 
 export async function getProblemStatementsForAdmin(department?: string): Promise<ProblemStatement[]> {
-  const url = department ? `/admin/problem-statements?department=${department}` : "/admin/problem-statements";
-  const response = await fetcher<{
-    success: boolean;
-    count: number;
-    problemStatements: ProblemStatement[];
-  }>(url);
-  return response.problemStatements;
+    const url = department ? `/admin/problem-statements?department=${department}` : "/admin/problem-statements";
+    const response = await fetcher<{
+        success: boolean;
+        count: number;
+        problemStatements: ProblemStatement[];
+    }>(url);
+    return response.problemStatements;
 }
 
 type AdminCreateProblemStatementData = {
     title: string;
     description: string;
     department: string;
+    domain: string;  // Added for domain-based filtering
     gDriveLink: string;
     facultyId: string;
 };
 
-export async function createProblemStatement(psData: AdminCreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
+export async function createProblemStatement(psData: AdminCreateProblemStatementData): Promise<{ success: boolean, ps: ProblemStatement }> {
     return fetcher('/admin/problem-statements', {
         method: 'POST',
         body: JSON.stringify(psData)
@@ -235,22 +236,23 @@ export type FacultyDashboardData = {
     }[];
 };
 
-export async function getFacultyDashboard(): Promise<{success: boolean, dashboard: FacultyDashboardData}> {
+export async function getFacultyDashboard(): Promise<{ success: boolean, dashboard: FacultyDashboardData }> {
     return fetcher('/faculty/dashboard');
 }
 
 export async function getMyProblemStatements(): Promise<ProblemStatement[]> {
-    const response = await fetcher<{success: boolean, list: ProblemStatement[]}>('/faculty/problem-statements');
+    const response = await fetcher<{ success: boolean, list: ProblemStatement[] }>('/faculty/problem-statements');
     return response.list;
 }
 
 type FacultyCreateProblemStatementData = {
     title: string;
     description: string;
+    domain: string;  // Added for domain-based filtering
     gDriveLink: string;
 };
 
-export async function createProblemStatementAsFaculty(psData: FacultyCreateProblemStatementData): Promise<{success: boolean, ps: ProblemStatement}> {
+export async function createProblemStatementAsFaculty(psData: FacultyCreateProblemStatementData): Promise<{ success: boolean, ps: ProblemStatement }> {
     return fetcher('/faculty/problem-statements', {
         method: 'POST',
         body: JSON.stringify(psData)
@@ -267,46 +269,64 @@ export async function deleteProblemStatementAsFaculty(id: string): Promise<void>
 
 export async function getAvailableProblemStatementsForBatch(department?: string): Promise<ProblemStatement[]> {
     const url = department ? `/batch/problem-statements?department=${department}` : '/batch/problem-statements';
-    const response = await fetcher<{success: boolean, ps: ProblemStatement[]}>(url);
+    const response = await fetcher<{ success: boolean, ps: ProblemStatement[] }>(url);
     return response.ps;
 }
 
-export async function getBatchDetails(batchId: string): Promise<{success: boolean, batch: Batch}> {
+export async function getBatchDetails(batchId: string): Promise<{ success: boolean, batch: Batch }> {
     return fetcher(`/batch/${batchId}/details`);
 }
 
-export async function chooseProblemStatement(batchId: string, psId: string): Promise<{success: boolean, message: string, batch: Batch}> {
+export async function chooseProblemStatement(batchId: string, psId: string): Promise<{ success: boolean, message: string, batch: Batch }> {
     return fetcher(`/batch/${batchId}/choose-ps`, {
         method: 'PUT',
         body: JSON.stringify({ psId })
     });
 }
 
-export async function saveStudentsForBatch(batchId: string, students: Student[]): Promise<{success: boolean, batch: Batch}> {
+export async function saveStudentsForBatch(batchId: string, students: Student[]): Promise<{ success: boolean, batch: Batch }> {
     return fetcher(`/batch/${batchId}/students`, {
         method: 'POST',
         body: JSON.stringify({ students })
     });
 }
 
-export async function generateBatchReport(batchId: string): Promise<{success: boolean, report: any}> {
+export async function generateBatchReport(batchId: string): Promise<{ success: boolean, report: any }> {
     return fetcher(`/batch/${batchId}/report`);
 }
 
+// Domain-based filtering for batch workflow
+export async function getDomainsByDepartment(department: string): Promise<{ success: boolean, department: string, domains: string[] }> {
+    return fetcher(`/batch/domains?department=${encodeURIComponent(department)}`);
+}
+
+export async function getProblemStatementsByDomain(department: string, domain: string): Promise<ProblemStatement[]> {
+    const response = await fetcher<{ success: boolean, count: number, ps: ProblemStatement[] }>(`/batch/problem-statements?department=${encodeURIComponent(department)}&domain=${encodeURIComponent(domain)}`);
+    return response.ps;
+}
+
+
 // Bulk Upload
 export async function bulkUpload(
-  entity: 'faculty' | 'batch' | 'problem-statements',
-  file: File
+    entity: 'faculty' | 'batch' | 'problem-statements',
+    file: File
 ): Promise<any> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
     if (!token) {
         throw new Error("Not authorized for this role.");
     }
-    
+
     const formData = new FormData();
     formData.append('file', file);
 
-    const response = await fetch(`${API_BASE_URL}/${entity}/bulk-upload`, {
+    // Map entity to correct endpoint
+    const endpointMap = {
+        'faculty': '/admin/bulk-upload/faculties',
+        'batch': '/batch/bulk-upload',
+        'problem-statements': '/problem-statements/bulk-upload'
+    };
+
+    const response = await fetch(`${API_BASE_URL}${endpointMap[entity]}`, {
         method: 'POST',
         headers: {
             'Authorization': `Bearer ${token}`,

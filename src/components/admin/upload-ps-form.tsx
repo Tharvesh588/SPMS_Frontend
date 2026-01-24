@@ -36,6 +36,7 @@ const formSchemaAsAdmin = z.object({
   department: z.string().refine((val) => departmentValues.includes(val), {
     message: 'Please select a valid department',
   }),
+  domain: z.string().min(1, 'Domain is required'),
   facultyId: z.string().min(1, 'You must select a faculty'),
 });
 
@@ -43,13 +44,14 @@ const formSchemaAsFaculty = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   gDriveLink: z.string().url('Must be a valid Google Drive link'),
+  domain: z.string().min(1, 'Domain is required'),
 });
 
 
 type UploadProblemStatementFormProps = {
-    onStatementCreated?: (newStatement: ProblemStatement) => void;
-    // If running as faculty, we don't need faculty selection.
-    asRole?: 'admin' | 'faculty';
+  onStatementCreated?: (newStatement: ProblemStatement) => void;
+  // If running as faculty, we don't need faculty selection.
+  asRole?: 'admin' | 'faculty';
 };
 
 
@@ -63,18 +65,18 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
 
   useEffect(() => {
     async function fetchFaculties() {
-        if (!isFacultyRole) { // Only fetch faculties if we're in admin role
-            try {
-                const data = await getFaculties();
-                setFaculties(data);
-            } catch (error) {
-                toast({
-                    variant: 'destructive',
-                    title: 'Failed to load faculties',
-                    description: 'Could not fetch the list of faculties for selection.',
-                });
-            }
+      if (!isFacultyRole) { // Only fetch faculties if we're in admin role
+        try {
+          const data = await getFaculties();
+          setFaculties(data);
+        } catch (error) {
+          toast({
+            variant: 'destructive',
+            title: 'Failed to load faculties',
+            description: 'Could not fetch the list of faculties for selection.',
+          });
         }
+      }
     }
     fetchFaculties();
   }, [toast, isFacultyRole]);
@@ -85,6 +87,7 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
       title: '',
       description: '',
       gDriveLink: '',
+      domain: '',
       ...(!isFacultyRole && { facultyId: '', department: '' }),
     },
   });
@@ -92,41 +95,41 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsLoading(true);
     try {
-        let newPs: ProblemStatement;
-        if (isFacultyRole) {
-            const result = await createProblemStatementAsFaculty(values);
-            newPs = result.ps;
-        } else {
-             const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
-             const result = await createProblemStatement(adminValues);
-             newPs = result.ps;
-        }
+      let newPs: ProblemStatement;
+      if (isFacultyRole) {
+        const result = await createProblemStatementAsFaculty(values);
+        newPs = result.ps;
+      } else {
+        const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
+        const result = await createProblemStatement(adminValues);
+        newPs = result.ps;
+      }
 
-        toast({
-            title: "Problem Statement Uploaded",
-            description: `"${values.title}" has been successfully uploaded.`,
-        });
-        form.reset();
+      toast({
+        title: "Problem Statement Uploaded",
+        description: `"${values.title}" has been successfully uploaded.`,
+      });
+      form.reset();
 
-        if (onStatementCreated) {
-            let populatedPs = newPs;
-            if (!isFacultyRole) {
-                const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
-                const faculty = faculties.find(f => f._id === adminValues.facultyId);
-                if (faculty) {
-                    populatedPs = { ...newPs, facultyId: faculty };
-                }
-            }
-             onStatementCreated(populatedPs);
+      if (onStatementCreated) {
+        let populatedPs = newPs;
+        if (!isFacultyRole) {
+          const adminValues = values as z.infer<typeof formSchemaAsAdmin>;
+          const faculty = faculties.find(f => f._id === adminValues.facultyId);
+          if (faculty) {
+            populatedPs = { ...newPs, facultyId: faculty };
+          }
         }
-    } catch(error) {
-        toast({
-            variant: "destructive",
-            title: "Upload Failed",
-            description: (error as Error).message || "An unexpected error occurred.",
-        });
+        onStatementCreated(populatedPs);
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Upload Failed",
+        description: (error as Error).message || "An unexpected error occurred.",
+      });
     } finally {
-        setIsLoading(false);
+      setIsLoading(false);
     }
   }
 
@@ -172,6 +175,19 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
             </FormItem>
           )}
         />
+        <FormField
+          control={form.control}
+          name="domain"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Domain *</FormLabel>
+              <FormControl>
+                <Input placeholder="e.g., AGENTIC AI, MACHINE LEARNING, IMAGE PROCESSING" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
         {!isFacultyRole && (
           <>
             <FormField
@@ -202,18 +218,18 @@ export function UploadProblemStatementForm({ onStatementCreated, asRole = 'admin
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Faculty</FormLabel>
-                    <Select onValueChange={field.onChange} defaultValue={field.value}>
-                      <FormControl>
-                        <SelectTrigger>
-                          <SelectValue placeholder="Select a faculty to assign this to" />
-                        </SelectTrigger>
-                      </FormControl>
-                      <SelectContent>
-                        {faculties.map(faculty => (
-                            <SelectItem key={faculty._id} value={faculty._id}>{faculty.name}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a faculty to assign this to" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {faculties.map(faculty => (
+                        <SelectItem key={faculty._id} value={faculty._id}>{faculty.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}
