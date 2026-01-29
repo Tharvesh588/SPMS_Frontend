@@ -321,7 +321,7 @@ export async function bulkUpload(
 
     // Map entity to correct endpoint
     const endpointMap = {
-        'faculty': '/admin/bulk-upload/faculties',
+        'faculty': '/faculty/bulk-upload',
         'batch': '/batch/bulk-upload',
         'problem-statements': '/problem-statements/bulk-upload'
     };
