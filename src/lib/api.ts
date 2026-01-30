@@ -33,12 +33,38 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
 
         const contentType = response.headers.get("content-type");
         let errMessage = `Request failed with status: ${response.status}`;
+        let errorCode: string | undefined;
 
         if (contentType && contentType.indexOf("application/json") !== -1) {
             try {
                 const err = await response.json();
                 errMessage = err.message || JSON.stringify(err);
+                errorCode = err.code;
+
+                // Handle session termination (logged in on another device)
+                if (response.status === 401 && errorCode === 'SESSION_TERMINATED') {
+                    if (typeof window !== 'undefined') {
+                        localStorage.clear();
+                        alert('You have been logged in on another device. Please login again.');
+                        window.location.href = '/';
+                    }
+                    throw new Error(errMessage);
+                }
+
+                // Handle token expiration
+                if (response.status === 401 && errorCode === 'TOKEN_EXPIRED') {
+                    if (typeof window !== 'undefined') {
+                        localStorage.clear();
+                        alert('Your session has expired. Please login again.');
+                        window.location.href = '/';
+                    }
+                    throw new Error(errMessage);
+                }
+
             } catch (e) {
+                if (e instanceof Error && e.message.includes('logged in on another device')) {
+                    throw e; // Re-throw session errors
+                }
                 errMessage = `Failed to parse JSON error response. Status: ${response.status} ${response.statusText}`;
             }
         } else {
@@ -65,27 +91,164 @@ type LoginCredentials = {
 };
 
 type LoginResponse = {
-    token: string;
-    user: {
+    success: boolean;
+    token?: string;
+    user?: {
         id: string;
-        role: 'admin' | 'faculty' | 'batch';
-    }
+        role: 'tadmin' | 'faculty' | 'batch';
+        name?: string;
+        email?: string;
+        username?: string;
+    };
+    message?: string;
+    code?: string;
+    hasActiveSession?: boolean;
 }
 
 export async function login(credentials: LoginCredentials, role: string): Promise<LoginResponse> {
-    const response = await fetcher<LoginResponse>(`/auth/login?role=${role}`, {
-        method: 'POST',
-        body: JSON.stringify({
-            ...credentials,
-            apiKey: 'temp-key'
-        }),
-    });
-    if (response.token && typeof window !== 'undefined') {
-        localStorage.setItem('token', response.token);
-        localStorage.setItem('userId', response.user.id);
-        localStorage.setItem('userRole', response.user.role);
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...credentials,
+                apiKey: 'temp-key'
+            }),
+        });
+
+        const data = await response.json();
+
+        // Handle already logged in (403)
+        if (response.status === 403 && data.code === 'ALREADY_LOGGED_IN') {
+            return {
+                success: false,
+                message: data.message,
+                code: 'ALREADY_LOGGED_IN',
+                hasActiveSession: true
+            };
+        }
+
+        // Handle invalid credentials (401)
+        if (response.status === 401) {
+            throw new Error(data.message || 'Invalid credentials');
+        }
+
+        // Handle other errors
+        if (!response.ok) {
+            throw new Error(data.message || 'Login failed');
+        }
+
+        // Success - store token and user data
+        if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.user.id);
+            localStorage.setItem('userRole', data.user.role);
+            if (data.user.name) localStorage.setItem('userName', data.user.name);
+        }
+
+        return {
+            success: true,
+            token: data.token,
+            user: data.user
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('An unexpected error occurred during login');
     }
-    return response;
+}
+
+export async function forceLogin(credentials: LoginCredentials, role: string): Promise<LoginResponse> {
+    try {
+        const response = await fetch(`${API_BASE_URL}/auth/force-login`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                ...credentials,
+                apiKey: 'temp-key'
+            }),
+        });
+
+        const data = await response.json();
+
+        // Handle invalid credentials
+        if (response.status === 401) {
+            throw new Error(data.message || 'Invalid credentials');
+        }
+
+        // Handle other errors
+        if (!response.ok) {
+            throw new Error(data.message || 'Force login failed');
+        }
+
+        // Success - store token and user data
+        if (data.token && typeof window !== 'undefined') {
+            localStorage.setItem('token', data.token);
+            localStorage.setItem('userId', data.user.id);
+            localStorage.setItem('userRole', data.user.role);
+            if (data.user.name) localStorage.setItem('userName', data.user.name);
+        }
+
+        return {
+            success: true,
+            token: data.token,
+            user: data.user,
+            message: data.message
+        };
+    } catch (error) {
+        if (error instanceof Error) {
+            throw error;
+        }
+        throw new Error('An unexpected error occurred during force login');
+    }
+}
+
+export async function logout(): Promise<{ success: boolean, message: string }> {
+    try {
+        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+
+        if (!token) {
+            // No token, just clear storage
+            if (typeof window !== 'undefined') {
+                localStorage.clear();
+            }
+            return { success: true, message: 'Logged out (no active session)' };
+        }
+
+        const response = await fetch(`${API_BASE_URL}/auth/logout`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+            },
+        });
+
+        // Clear local storage regardless of response
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
+
+        const data = await response.json();
+
+        return {
+            success: true,
+            message: data.message || 'Logged out successfully'
+        };
+    } catch (error) {
+        // Even if API call fails, clear local storage
+        if (typeof window !== 'undefined') {
+            localStorage.clear();
+        }
+        return {
+            success: true,
+            message: 'Logged out (session cleared locally)'
+        };
+    }
 }
 
 // Admin - Faculty
