@@ -14,7 +14,7 @@ export function SplashScreen({
     appName = "ProjectVerse",
     subtitle = "Please wait while we prepare the application for you...",
     redirectTo = "/u/portal/auth",
-    displayDuration = 2000 // 3 seconds
+    displayDuration = 2000 // 2 seconds
 }: SplashScreenProps) {
     const router = useRouter();
     const [sessionTime, setSessionTime] = useState<string>("Loading...");
@@ -52,10 +52,13 @@ export function SplashScreen({
         <div className="fixed inset-0 z-50 flex flex-col bg-gradient-to-br from-gray-50 to-gray-100">
             {/* Main Content */}
             <div className="flex-1 flex flex-col items-center justify-center px-4">
-                {/* Loading Spinner */}
-                <div className="relative mb-8">
-                    <div className="w-16 h-16 border-4 border-gray-200 rounded-full"></div>
-                    <div className="absolute top-0 left-0 w-16 h-16 border-4 border-t-blue-600 border-r-blue-600 border-b-transparent border-l-transparent rounded-full animate-spin"></div>
+                {/* Loading Animation - Wave Dots */}
+                <div className="flex items-center justify-center gap-3 mb-8">
+                    <div className="w-4 h-4 bg-blue-600 rounded-full animate-[bounce_1s_ease-in-out_infinite_0ms]"></div>
+                    <div className="w-4 h-4 bg-blue-500 rounded-full animate-[bounce_1s_ease-in-out_infinite_150ms]"></div>
+                    <div className="w-4 h-4 bg-blue-400 rounded-full animate-[bounce_1s_ease-in-out_infinite_300ms]"></div>
+                    <div className="w-4 h-4 bg-blue-500 rounded-full animate-[bounce_1s_ease-in-out_infinite_450ms]"></div>
+                    <div className="w-4 h-4 bg-blue-600 rounded-full animate-[bounce_1s_ease-in-out_infinite_600ms]"></div>
                 </div>
 
                 {/* App Name */}
@@ -75,7 +78,7 @@ export function SplashScreen({
                     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-gray-600">
                         {/* Developer Credit */}
                         <div className="flex items-center gap-2">
-                            <span className="font-medium text-gray-700">me.imtharvesh.projectsverse</span>
+                            <span className="font-medium text-gray-700">contact@imtharvesh.me</span>
                         </div>
 
                         {/* Session Date & Time */}
@@ -97,15 +100,15 @@ export function SplashScreen({
                         </div>
 
                         {/* App Provider */}
-                        <div className="flex items-center gap-2">
-                            <span className="text-gray-500">@</span>
+                        <div className="flex items-center">
+                            <span className="text-gray-500">🩶</span>
                             <a
                                 href="https://imtharvesh.me"
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                                className="font-medium text-gray-500 hover:text-gray-700 hover:underline transition-colors"
                             >
-                                imtharvesh.me
+                            imtharvesh.me
                             </a>
                         </div>
                     </div>

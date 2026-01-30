@@ -4,19 +4,22 @@
 
 @layer base {
   :root {
-    --background: 240 10% 99%; /* light lavender */
+    --background: 240 10% 99%;
+    /* light lavender */
     --foreground: 224 76% 15%;
     --card: 240 10% 100%;
     --card-foreground: 224 76% 15%;
     --popover: 240 10% 100%;
     --popover-foreground: 224 76% 15%;
-    --primary: 326 100% 35%; /* deep purple */
+    --primary: 326 100% 35%;
+    /* deep purple */
     --primary-foreground: 355 100% 97%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 225 95% 40%; /* soft blue */
+    --accent: 225 95% 40%;
+    /* soft blue */
     --accent-foreground: 355 100% 97%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -40,19 +43,22 @@
   }
 
   .dark {
-    --background: 240 10% 99%; /* light lavender */
+    --background: 240 10% 99%;
+    /* light lavender */
     --foreground: 224 76% 15%;
     --card: 240 10% 100%;
     --card-foreground: 224 76% 15%;
     --popover: 240 10% 100%;
     --popover-foreground: 224 76% 15%;
-    --primary: 326 100% 35%; /* deep purple */
+    --primary: 326 100% 35%;
+    /* deep purple */
     --primary-foreground: 355 100% 97%;
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
-    --accent: 225 95% 40%; /* soft blue */
+    --accent: 225 95% 40%;
+    /* soft blue */
     --accent-foreground: 355 100% 97%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
@@ -79,6 +85,7 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground;
   }
