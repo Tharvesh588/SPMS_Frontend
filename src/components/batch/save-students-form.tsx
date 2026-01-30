@@ -35,7 +35,7 @@ type SaveStudentsFormProps = {
 export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
-  
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -54,7 +54,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
       toast({ variant: 'destructive', title: 'Error', description: 'Batch ID not found.' });
       return;
     }
-    
+
     setIsLoading(true);
     try {
       await saveStudentsForBatch(batchId, values.students);
@@ -63,7 +63,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
         description: "Your team details have been successfully saved.",
       });
       onStudentsSaved();
-    } catch(error) {
+    } catch (error) {
       console.error('Failed to save student details:', error);
       toast({
         variant: "destructive",
@@ -98,36 +98,57 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
                     <FormItem><FormLabel>Roll Number</FormLabel><FormControl><Input placeholder="e.g., 7377211..." {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
-                 <div className="grid md:grid-cols-3 gap-4">
-                     <FormField control={form.control} name={`students.${index}.dept`} render={({ field }) => (
-                        <FormItem><FormLabel>Department</FormLabel><FormControl><Input placeholder="e.g., CSE" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                     <FormField control={form.control} name={`students.${index}.section`} render={({ field }) => (
-                        <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g., A" {...field} /></FormControl><FormMessage /></FormItem>
-                    )} />
-                     <FormField
-                        control={form.control}
-                        name={`students.${index}.year`}
-                        render={({ field }) => (
-                            <FormItem>
-                            <FormLabel>Year</FormLabel>
-                            <Select onValueChange={field.onChange} defaultValue={field.value}>
-                                <FormControl>
-                                <SelectTrigger>
-                                    <SelectValue placeholder="Select year" />
-                                </SelectTrigger>
-                                </FormControl>
-                                <SelectContent>
-                                <SelectItem value="I">I</SelectItem>
-                                <SelectItem value="II">II</SelectItem>
-                                <SelectItem value="III">III</SelectItem>
-                                <SelectItem value="IV">IV</SelectItem>
-                                </SelectContent>
-                            </Select>
-                            <FormMessage />
-                            </FormItem>
-                        )}
-                        />
+                <div className="grid md:grid-cols-3 gap-4">
+                  <FormField control={form.control} name={`students.${index}.dept`} render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Department</FormLabel>
+                      <Select onValueChange={field.onChange} defaultValue={field.value}>
+                        <FormControl>
+                          <SelectTrigger>
+                            <SelectValue placeholder="Select department" />
+                          </SelectTrigger>
+                        </FormControl>
+                        <SelectContent>
+                          <SelectItem value="AIDS">AIDS</SelectItem>
+                          <SelectItem value="Civil">Civil</SelectItem>
+                          <SelectItem value="Mech">Mech</SelectItem>
+                          <SelectItem value="BME">BME</SelectItem>
+                          <SelectItem value="ECE">ECE</SelectItem>
+                          <SelectItem value="EEE">EEE</SelectItem>
+                          <SelectItem value="CSBS">CSBS</SelectItem>
+                          <SelectItem value="CSE">CSE</SelectItem>
+                          <SelectItem value="IT">IT</SelectItem>
+                        </SelectContent>
+                      </Select>
+                      <FormMessage />
+                    </FormItem>
+                  )} />
+                  <FormField control={form.control} name={`students.${index}.section`} render={({ field }) => (
+                    <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g., A" {...field} /></FormControl><FormMessage /></FormItem>
+                  )} />
+                  <FormField
+                    control={form.control}
+                    name={`students.${index}.year`}
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Year</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl>
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select year" />
+                            </SelectTrigger>
+                          </FormControl>
+                          <SelectContent>
+                            <SelectItem value="I">I</SelectItem>
+                            <SelectItem value="II">II</SelectItem>
+                            <SelectItem value="III">III</SelectItem>
+                            <SelectItem value="IV">IV</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                 </div>
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField control={form.control} name={`students.${index}.mailId`} render={({ field }) => (
@@ -145,9 +166,9 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
                 )}
               </div>
             ))}
-             {form.formState.errors.students && !form.formState.errors.students.root && (
-                 <p className="text-sm font-medium text-destructive">{form.formState.errors.students.message}</p>
-             )}
+            {form.formState.errors.students && !form.formState.errors.students.root && (
+              <p className="text-sm font-medium text-destructive">{form.formState.errors.students.message}</p>
+            )}
 
             {fields.length < 7 && (
               <Button type="button" variant="outline" onClick={() => append({ nameInitial: '', rollNumber: '', dept: '', section: '', year: 'IV', mailId: '', phone: '' })}>

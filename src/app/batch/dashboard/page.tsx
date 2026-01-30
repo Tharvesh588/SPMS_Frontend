@@ -425,9 +425,9 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect
           <CardTitle className="line-clamp-2 flex-1">{ps.title}</CardTitle>
           <Badge variant="secondary" className="shrink-0">{ps.domain}</Badge>
         </div>
-        <CardDescription>
+        {/* <CardDescription>
           Faculty: {typeof ps.facultyId === 'object' ? ps.facultyId.name : 'N/A'}
-        </CardDescription>
+        </CardDescription> */}
       </CardHeader>
       <CardContent className="flex-grow">
         <p className="text-sm text-muted-foreground line-clamp-3">
