@@ -1,0 +1,93 @@
+{
+    "name": "ProjectVerse - Student Project Management System",
+    "short_name": "ProjectVerse SPMS",
+    "description": "Comprehensive Student Project Management System for engineering colleges. Manage final year projects, problem statements, faculty assignments, and batch coordination. Developed by Tharvesh Muhaideen A (TM Nexus Tools).",
+    "start_url": "/",
+    "display": "standalone",
+    "background_color": "#ffffff",
+    "theme_color": "#3b82f6",
+    "orientation": "portrait-primary",
+    "scope": "/",
+    "lang": "en-IN",
+    "dir": "ltr",
+    "categories": [
+        "education",
+        "productivity",
+        "business"
+    ],
+    "icons": [
+        {
+            "src": "https://egspec.org/favicons/favicon.ico",
+            "sizes": "48x48",
+            "type": "image/x-icon"
+        },
+        {
+            "src": "https://egspec.org/favicons/android-chrome-192x192.png",
+            "sizes": "192x192",
+            "type": "image/png",
+            "purpose": "any maskable"
+        },
+        {
+            "src": "https://egspec.org/favicons/android-chrome-512x512.png",
+            "sizes": "512x512",
+            "type": "image/png",
+            "purpose": "any maskable"
+        }
+    ],
+    "shortcuts": [
+        {
+            "name": "Admin Login",
+            "short_name": "Admin",
+            "description": "Access Admin Dashboard",
+            "url": "/u/login?role=admin",
+            "icons": [
+                {
+                    "src": "https://egspec.org/favicons/favicon.ico",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Faculty Login",
+            "short_name": "Faculty",
+            "description": "Access Faculty Portal",
+            "url": "/u/login?role=faculty",
+            "icons": [
+                {
+                    "src": "https://egspec.org/favicons/favicon.ico",
+                    "sizes": "96x96"
+                }
+            ]
+        },
+        {
+            "name": "Student Login",
+            "short_name": "Student",
+            "description": "Access Student Portal",
+            "url": "/u/login?role=batch",
+            "icons": [
+                {
+                    "src": "https://egspec.org/favicons/favicon.ico",
+                    "sizes": "96x96"
+                }
+            ]
+        }
+    ],
+    "screenshots": [
+        {
+            "src": "/screenshots/desktop-1.png",
+            "sizes": "1920x1080",
+            "type": "image/png",
+            "form_factor": "wide",
+            "label": "ProjectVerse Dashboard"
+        },
+        {
+            "src": "/screenshots/mobile-1.png",
+            "sizes": "750x1334",
+            "type": "image/png",
+            "form_factor": "narrow",
+            "label": "Mobile View"
+        }
+    ],
+    "related_applications": [],
+    "prefer_related_applications": false
+}

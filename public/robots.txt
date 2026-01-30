@@ -1,0 +1,32 @@
+# Robots.txt for ProjectVerse SPMS - https://spms.egspgroup.in
+# Developed by Tharvesh Muhaideen A (TM Nexus Tools)
+
+# Allow all search engines to crawl
+User-agent: *
+Allow: /
+
+# Disallow admin routes from search engines
+Disallow: /admin/
+Disallow: /faculty/
+Disallow: /batch/
+
+# Allow public pages
+Allow: /u/
+Allow: /$
+
+# Sitemap location
+Sitemap: https://spms.egspgroup.in/sitemap.xml
+
+# Crawl-delay for polite crawling
+Crawl-delay: 1
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
