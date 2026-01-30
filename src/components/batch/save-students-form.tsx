@@ -95,7 +95,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
                     <FormItem><FormLabel>Name with Initial</FormLabel><FormControl><Input placeholder="e.g., John D." {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                   <FormField control={form.control} name={`students.${index}.rollNumber`} render={({ field }) => (
-                    <FormItem><FormLabel>Roll Number</FormLabel><FormControl><Input placeholder="e.g., 7377211..." {...field} /></FormControl><FormMessage /></FormItem>
+                    <FormItem><FormLabel>Register Number</FormLabel><FormControl><Input placeholder="e.g., 7377211..." {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
                 <FormField control={form.control} name={`students.${index}.dept`} render={({ field }) => (
