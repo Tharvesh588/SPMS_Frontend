@@ -39,7 +39,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      students: [{ nameInitial: '', rollNumber: '', dept: '', section: '', year: 'IV', mailId: '', phone: '' }],
+      students: [{ nameInitial: '', rollNumber: '', dept: '', section: 'A', year: 'IV', mailId: '', phone: '' }],
     },
   });
 
@@ -98,58 +98,30 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
                     <FormItem><FormLabel>Roll Number</FormLabel><FormControl><Input placeholder="e.g., 7377211..." {...field} /></FormControl><FormMessage /></FormItem>
                   )} />
                 </div>
-                <div className="grid md:grid-cols-3 gap-4">
-                  <FormField control={form.control} name={`students.${index}.dept`} render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Department</FormLabel>
-                      <Select onValueChange={field.onChange} defaultValue={field.value}>
-                        <FormControl>
-                          <SelectTrigger>
-                            <SelectValue placeholder="Select department" />
-                          </SelectTrigger>
-                        </FormControl>
-                        <SelectContent>
-                          <SelectItem value="AIDS">AIDS</SelectItem>
-                          <SelectItem value="Civil">Civil</SelectItem>
-                          <SelectItem value="Mech">Mech</SelectItem>
-                          <SelectItem value="BME">BME</SelectItem>
-                          <SelectItem value="ECE">ECE</SelectItem>
-                          <SelectItem value="EEE">EEE</SelectItem>
-                          <SelectItem value="CSBS">CSBS</SelectItem>
-                          <SelectItem value="CSE">CSE</SelectItem>
-                          <SelectItem value="IT">IT</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      <FormMessage />
-                    </FormItem>
-                  )} />
-                  <FormField control={form.control} name={`students.${index}.section`} render={({ field }) => (
-                    <FormItem><FormLabel>Section</FormLabel><FormControl><Input placeholder="e.g., A" {...field} /></FormControl><FormMessage /></FormItem>
-                  )} />
-                  <FormField
-                    control={form.control}
-                    name={`students.${index}.year`}
-                    render={({ field }) => (
-                      <FormItem>
-                        <FormLabel>Year</FormLabel>
-                        <Select onValueChange={field.onChange} defaultValue={field.value}>
-                          <FormControl>
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select year" />
-                            </SelectTrigger>
-                          </FormControl>
-                          <SelectContent>
-                            <SelectItem value="I">I</SelectItem>
-                            <SelectItem value="II">II</SelectItem>
-                            <SelectItem value="III">III</SelectItem>
-                            <SelectItem value="IV">IV</SelectItem>
-                          </SelectContent>
-                        </Select>
-                        <FormMessage />
-                      </FormItem>
-                    )}
-                  />
-                </div>
+                <FormField control={form.control} name={`students.${index}.dept`} render={({ field }) => (
+                  <FormItem>
+                    <FormLabel>Department</FormLabel>
+                    <Select onValueChange={field.onChange} defaultValue={field.value}>
+                      <FormControl>
+                        <SelectTrigger>
+                          <SelectValue placeholder="Select department" />
+                        </SelectTrigger>
+                      </FormControl>
+                      <SelectContent>
+                        <SelectItem value="AIDS">AIDS</SelectItem>
+                        <SelectItem value="Civil">Civil</SelectItem>
+                        <SelectItem value="Mech">Mech</SelectItem>
+                        <SelectItem value="BME">BME</SelectItem>
+                        <SelectItem value="ECE">ECE</SelectItem>
+                        <SelectItem value="EEE">EEE</SelectItem>
+                        <SelectItem value="CSBS">CSBS</SelectItem>
+                        <SelectItem value="CSE">CSE</SelectItem>
+                        <SelectItem value="IT">IT</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <FormMessage />
+                  </FormItem>
+                )} />
                 <div className="grid md:grid-cols-2 gap-4">
                   <FormField control={form.control} name={`students.${index}.mailId`} render={({ field }) => (
                     <FormItem><FormLabel>Email</FormLabel><FormControl><Input type="email" placeholder="e.g., student@example.com" {...field} /></FormControl><FormMessage /></FormItem>
@@ -171,7 +143,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
             )}
 
             {fields.length < 7 && (
-              <Button type="button" variant="outline" onClick={() => append({ nameInitial: '', rollNumber: '', dept: '', section: '', year: 'IV', mailId: '', phone: '' })}>
+              <Button type="button" variant="outline" onClick={() => append({ nameInitial: '', rollNumber: '', dept: '', section: 'A', year: 'IV', mailId: '', phone: '' })}>
                 <PlusCircle className="mr-2 h-4 w-4" /> Add Another Member
               </Button>
             )}
