@@ -403,12 +403,12 @@ ${report.students.map((s: any, i: number) => `  ${i + 1}. ${s.nameInitial} (${s.
         <div>
           <Card>
             <CardHeader>
-              <CardTitle>Project Coordinator</CardTitle>
+              <CardTitle>Project Supervisor</CardTitle>
             </CardHeader>
             <CardContent>
               <p className="text-lg font-semibold">{coordinator.name}</p>
               <p className="text-sm text-muted-foreground">{coordinator.email}</p>
-              <p className="text-sm text-muted-foreground mt-4">Contact your coordinator for further guidance.</p>
+              <p className="text-sm text-muted-foreground mt-4">Contact your supervisor for further guidance.</p>
             </CardContent>
           </Card>
         </div>
