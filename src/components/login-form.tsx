@@ -261,10 +261,10 @@ export default function LoginForm() {
               <AlertDialogTitle>Already Logged In</AlertDialogTitle>
             </div>
             <AlertDialogDescription className="space-y-2 pt-2">
-              <p>You are already logged in on another device.</p>
-              <p className="text-sm">
+              <div>You are already logged in on another device.</div>
+              <div className="text-sm">
                 Would you like to <strong>force login</strong> here? This will log you out from the other device.
-              </p>
+              </div>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

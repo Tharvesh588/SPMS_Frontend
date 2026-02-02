@@ -6,9 +6,9 @@ const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
 // Universal fetch helper
 async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
     const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
-    const headers: HeadersInit = {
+    const headers: Record<string, string> = {
         'Content-Type': 'application/json',
-        ...options.headers,
+        ...(options.headers as Record<string, string>),
     };
 
     const isProtectedRoute = url.startsWith('/admin') || url.startsWith('/faculty') || url.startsWith('/batch');
@@ -426,6 +426,10 @@ export async function deleteProblemStatementAsFaculty(id: string): Promise<void>
     await fetcher(`/faculty/problem-statements/${id}`, {
         method: 'DELETE',
     });
+}
+
+export async function getBatchDetailsAsFaculty(batchId: string): Promise<{ success: boolean, batch: Batch }> {
+    return fetcher(`/faculty/batches/${batchId}`);
 }
 
 // Batch Endpoints

@@ -41,9 +41,9 @@ export default function FacultyDashboard() {
       } catch (error) {
         console.error("Failed to fetch faculty data", error);
         toast({
-            variant: "destructive",
-            title: "Failed to load dashboard",
-            description: (error as Error).message || "Could not fetch the necessary data. Please try again later."
+          variant: "destructive",
+          title: "Failed to load dashboard",
+          description: (error as Error).message || "Could not fetch the necessary data. Please try again later."
         })
       } finally {
         setIsLoading(false);
@@ -63,43 +63,47 @@ export default function FacultyDashboard() {
         </div>
       ) : (
         <div className="flex flex-col gap-4">
-            {facultyDetails && (
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Welcome, {facultyDetails.name}</CardTitle>
-                        <CardDescription>Department of {facultyDetails.department}</CardDescription>
-                    </CardHeader>
-                </Card>
-            )}
+          {facultyDetails && (
+            <Card>
+              <CardHeader>
+                <CardTitle>Welcome, {facultyDetails.name}</CardTitle>
+                <CardDescription>Department of {facultyDetails.department}</CardDescription>
+              </CardHeader>
+            </Card>
+          )}
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              <StatCard title="My Uploaded PS" value={totalProblemStatements ?? '...'} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="My Quota" value={quotaValue} icon={<FolderKanban className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Assigned Batches" value={assignedBatches?.length ?? '...'} icon={<Users className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+            <StatCard title="My Uploaded PS" value={totalProblemStatements ?? '...'} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+            <StatCard title="My Quota" value={quotaValue} icon={<FolderKanban className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+            <StatCard title="Assigned Batches" value={assignedBatches?.length ?? '...'} icon={<Users className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
           </div>
-          
-           <Card>
+
+          <Card>
             <CardHeader>
-                <CardTitle>Assigned Batches</CardTitle>
-                <CardDescription>These are the student batches assigned to you for project coordination.</CardDescription>
+              <CardTitle>Assigned Batches</CardTitle>
+              <CardDescription>These are the student batches assigned to you for project coordination.</CardDescription>
             </CardHeader>
             <CardContent>
-                {assignedBatches && assignedBatches.length > 0 ? (
-                    <div className="space-y-4">
-                        {assignedBatches.map(batch => (
-                            <div key={batch._id} className="flex items-center justify-between p-3 bg-secondary rounded-lg">
-                                <div>
-                                    <p className="font-semibold">{batch.batchName}</p>
-                                    <p className="text-sm text-muted-foreground">{batch.projectId?.title || 'Project not yet selected'}</p>
-                                </div>
-                                <Users className="h-5 w-5 text-muted-foreground" />
-                            </div>
-                        ))}
-                    </div>
-                ) : (
-                    <div className="text-center py-8 border-2 border-dashed rounded-lg">
-                        <p className="text-muted-foreground">No batches have been assigned to you yet.</p>
-                    </div>
-                )}
+              {assignedBatches && assignedBatches.length > 0 ? (
+                <div className="space-y-4">
+                  {assignedBatches.map(batch => (
+                    <Link
+                      key={batch._id}
+                      href={`/faculty/batch/${batch._id}`}
+                      className="flex items-center justify-between p-3 bg-secondary rounded-lg hover:bg-secondary/80 transition-colors cursor-pointer group"
+                    >
+                      <div>
+                        <p className="font-semibold group-hover:text-primary transition-colors">{batch.batchName}</p>
+                        <p className="text-sm text-muted-foreground">{batch.projectId?.title || 'Project not yet selected'}</p>
+                      </div>
+                      <ArrowUpRight className="h-5 w-5 text-muted-foreground group-hover:text-primary transition-colors" />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 border-2 border-dashed rounded-lg">
+                  <p className="text-muted-foreground">No batches have been assigned to you yet.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </div>

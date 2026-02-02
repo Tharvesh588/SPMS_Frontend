@@ -378,11 +378,11 @@ ${report.students.map((s: any, i: number) => `  ${i + 1}. ${s.nameInitial} (${s.
         </div>
       </div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-lg font-semibold md:text-2xl">My Project</h1>
-        <Button onClick={handleDownloadReport} disabled={isDownloading}>
+        <h1 className="text-lg font-semibold md:text-2xl">Project Details</h1>
+        {/* <Button onClick={handleDownloadReport} disabled={isDownloading}>
           {isDownloading ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Download className="mr-2 h-4 w-4" />}
           Download Report
-        </Button>
+        </Button> */}
       </div>
       <div className="grid md:grid-cols-3 gap-8">
         <div className="md:col-span-2">
