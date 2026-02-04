@@ -4,13 +4,13 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, CheckSquare, Loader2, FileText, ArrowUpRight } from 'lucide-react';
+import { Upload, Users, UserPlus, LayoutDashboard, FilePlus2, BookCopy, CheckSquare, Loader2, FileText, ArrowUpRight, Download } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFaculties, getBatches, getProblemStatementsForAdmin } from '@/lib/api';
+import { getFaculties, getBatches, getProblemStatementsForAdmin, downloadProjectAssignmentsCSV } from '@/lib/api';
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -59,7 +59,7 @@ export default function AdminDashboard() {
         getBatches(),
         getProblemStatementsForAdmin(),
       ]);
-      
+
       const projectsSelected = batches.filter(batch => batch.projectId).length;
       const assignedProblemStatements = problemStatements.filter(ps => ps.isAssigned).length;
 
@@ -85,82 +85,115 @@ export default function AdminDashboard() {
     // We wrap this in a timeout to allow the backend to process the change
     // before we refetch the data.
     setTimeout(() => {
-        fetchData();
+      fetchData();
     }, 500);
   };
 
+  const [isDownloading, setIsDownloading] = useState(false);
+
+  const handleDownloadCSV = async () => {
+    try {
+      setIsDownloading(true);
+      await downloadProjectAssignmentsCSV();
+    } catch (error) {
+      console.error('Failed to download CSV:', error);
+      alert('Failed to download CSV file. Please try again.');
+    } finally {
+      setIsDownloading(false);
+    }
+  };
+
+
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-        <div className="flex flex-col gap-4">
-             <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
-              <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-              <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
-            </div>
-
-            <Card>
-                <CardHeader>
-                    <CardTitle>Quick Actions</CardTitle>
-                    <CardDescription>Manage the system from one place.</CardDescription>
-                </CardHeader>
-                <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-                    <Dialog>
-                        <DialogTrigger asChild>
-                             <Button className="w-full justify-start p-6 text-left h-auto">
-                                <UserPlus className="mr-4 h-6 w-6" />
-                                <div>
-                                    <p className="font-semibold">Create Faculty Account</p>
-                                    <p className="font-normal text-sm text-primary-foreground/80">Onboard new faculty members.</p>
-                                </div>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create Faculty Account</DialogTitle>
-                            </DialogHeader>
-                            <CreateFacultyForm onFacultyCreated={handleCreation}/>
-                        </DialogContent>
-                    </Dialog>
-                    
-                    <Dialog>
-                         <DialogTrigger asChild>
-                             <Button className="w-full justify-start p-6 text-left h-auto">
-                                <Users className="mr-4 h-6 w-6" />
-                                <div>
-                                    <p className="font-semibold">Create Batch Account</p>
-                                    <p className="font-normal text-sm text-primary-foreground/80">Create accounts for student batches.</p>
-                                </div>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Create Batch Account</DialogTitle>
-                            </DialogHeader>
-                            <CreateBatchForm onBatchCreated={handleCreation}/>
-                        </DialogContent>
-                    </Dialog>
-
-                    <Dialog>
-                        <DialogTrigger asChild>
-                             <Button className="w-full justify-start p-6 text-left h-auto">
-                                <Upload className="mr-4 h-6 w-6" />
-                                <div>
-                                    <p className="font-semibold">Upload Problem Statement</p>
-                                    <p className="font-normal text-sm text-primary-foreground/80">Add a new project idea.</p>
-                                </div>
-                            </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                            <DialogHeader>
-                                <DialogTitle>Upload Problem Statement</DialogTitle>
-                            </DialogHeader>
-                            <UploadProblemStatementForm onStatementCreated={handleCreation}/>
-                        </DialogContent>
-                    </Dialog>
-                </CardContent>
-            </Card>
+      <div className="flex flex-col gap-4">
+        <div className="grid gap-4 md:grid-cols-2 md:gap-8 lg:grid-cols-4">
+          <StatCard title="Total Faculties" value={stats.faculties} icon={<Users className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+          <StatCard title="Total Batches" value={stats.batches} icon={<BookCopy className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+          <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
+          <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Quick Actions</CardTitle>
+            <CardDescription>Manage the system from one place.</CardDescription>
+          </CardHeader>
+          <CardContent className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-start p-6 text-left h-auto">
+                  <UserPlus className="mr-4 h-6 w-6" />
+                  <div>
+                    <p className="font-semibold">Create Faculty Account</p>
+                    <p className="font-normal text-sm text-primary-foreground/80">Onboard new faculty members.</p>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Faculty Account</DialogTitle>
+                </DialogHeader>
+                <CreateFacultyForm onFacultyCreated={handleCreation} />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-start p-6 text-left h-auto">
+                  <Users className="mr-4 h-6 w-6" />
+                  <div>
+                    <p className="font-semibold">Create Batch Account</p>
+                    <p className="font-normal text-sm text-primary-foreground/80">Create accounts for student batches.</p>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Create Batch Account</DialogTitle>
+                </DialogHeader>
+                <CreateBatchForm onBatchCreated={handleCreation} />
+              </DialogContent>
+            </Dialog>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="w-full justify-start p-6 text-left h-auto">
+                  <Upload className="mr-4 h-6 w-6" />
+                  <div>
+                    <p className="font-semibold">Upload Problem Statement</p>
+                    <p className="font-normal text-sm text-primary-foreground/80">Add a new project idea.</p>
+                  </div>
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Upload Problem Statement</DialogTitle>
+                </DialogHeader>
+                <UploadProblemStatementForm onStatementCreated={handleCreation} />
+              </DialogContent>
+            </Dialog>
+
+            <Button
+              className="w-full justify-start p-6 text-left h-auto"
+              onClick={handleDownloadCSV}
+              disabled={isDownloading}
+            >
+              {isDownloading ? (
+                <Loader2 className="mr-4 h-6 w-6 animate-spin" />
+              ) : (
+                <Download className="mr-4 h-6 w-6" />
+              )}
+              <div>
+                <p className="font-semibold">Download Project Assignments</p>
+                <p className="font-normal text-sm text-primary-foreground/80">
+                  {isDownloading ? 'Generating CSV...' : 'Export all project data to CSV.'}
+                </p>
+              </div>
+            </Button>
+          </CardContent>
+        </Card>
+      </div>
     </DashboardLayout>
   );
 }

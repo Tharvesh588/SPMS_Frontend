@@ -2,6 +2,7 @@
 import { Faculty, Batch, ProblemStatement, Student } from "@/types";
 
 const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
+// const API_BASE_URL = "http://localhost:5000/api/v1";
 
 // Universal fetch helper
 async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
@@ -514,4 +515,92 @@ export async function bulkUpload(
 
     const result = await response.json();
     return result;
+}
+
+// Download CSV for Admin
+export async function downloadProjectAssignmentsCSV(): Promise<void> {
+    try {
+        // Fetch all batches with their details
+        const batches = await getBatches();
+
+        // Create CSV header
+        const csvRows: string[] = [];
+        csvRows.push('PS,Faculty,Department,Batch Name,Member Names,Roll Numbers');
+
+        // Process each batch
+        for (const batch of batches) {
+            // Only include batches that have selected a project
+            if (batch.projectId) {
+                // Fetch detailed batch information
+                const batchDetails = await getBatchDetailsAsAdmin(batch._id);
+                const batchData = batchDetails.batch;
+
+                // Extract project and faculty information
+                const ps = typeof batchData.projectId === 'object' && batchData.projectId !== null
+                    ? batchData.projectId.title
+                    : 'N/A';
+
+                const faculty = typeof batchData.projectId === 'object' &&
+                    batchData.projectId !== null &&
+                    batchData.projectId.facultyId &&
+                    typeof batchData.projectId.facultyId === 'object'
+                    ? batchData.projectId.facultyId.name
+                    : 'N/A';
+
+                // Get department from project or students
+                const department = typeof batchData.projectId === 'object' && batchData.projectId !== null
+                    ? batchData.projectId.department
+                    : (batchData.students && batchData.students.length > 0 ? batchData.students[0].dept : 'N/A');
+                const batchName = batchData.batchName || 'N/A';
+
+                // Extract student information
+                const memberNames = batchData.students && batchData.students.length > 0
+                    ? batchData.students.map(s => s.nameInitial).join('; ')
+                    : 'N/A';
+
+                const rollNumbers = batchData.students && batchData.students.length > 0
+                    ? batchData.students.map(s => s.rollNumber).join('; ')
+                    : 'N/A';
+
+                // Escape CSV values (handle commas and quotes)
+                const escapeCsvValue = (value: string) => {
+                    if (value.includes(',') || value.includes('"') || value.includes('\n')) {
+                        return `"${value.replace(/"/g, '""')}"`;
+                    }
+                    return value;
+                };
+
+                // Add row to CSV
+                csvRows.push([
+                    escapeCsvValue(ps),
+                    escapeCsvValue(faculty),
+                    escapeCsvValue(department),
+                    escapeCsvValue(batchName),
+                    escapeCsvValue(memberNames),
+                    escapeCsvValue(rollNumbers)
+                ].join(','));
+            }
+        }
+
+        // Create CSV content
+        const csvContent = csvRows.join('\n');
+
+        // Create blob and download
+        const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+        const link = document.createElement('a');
+        const url = URL.createObjectURL(blob);
+
+        link.setAttribute('href', url);
+        link.setAttribute('download', `project_assignments_${new Date().toISOString().split('T')[0]}.csv`);
+        link.style.visibility = 'hidden';
+
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+
+        URL.revokeObjectURL(url);
+    } catch (error) {
+        console.error('Error downloading CSV:', error);
+        throw new Error('Failed to download CSV file');
+    }
 }
