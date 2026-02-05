@@ -35,7 +35,7 @@ export default function BatchProfilePage() {
 
   const fetchDetails = useCallback(async () => {
     setIsLoading(true);
-    const batchId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    const batchId = typeof window !== 'undefined' ? sessionStorage.getItem('userId') : null;
     if (!batchId) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'Could not find batch ID.' });
       setIsLoading(false);
@@ -74,7 +74,7 @@ export default function BatchProfilePage() {
       </DashboardLayout>
     );
   }
-  
+
   const project = batchDetails.projectId as ProblemStatement;
 
   return (
@@ -87,21 +87,21 @@ export default function BatchProfilePage() {
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-center space-x-4">
-                <Badge variant="secondary">Batch Name</Badge>
-                <p className="font-semibold">{batchDetails.batchName}</p>
+              <Badge variant="secondary">Batch Name</Badge>
+              <p className="font-semibold">{batchDetails.batchName}</p>
             </div>
-             <div className="flex items-center space-x-4">
-                <Badge variant="secondary">Batch ID</Badge>
-                <p className="font-mono text-sm">{batchDetails._id}</p>
+            <div className="flex items-center space-x-4">
+              <Badge variant="secondary">Batch ID</Badge>
+              <p className="font-mono text-sm">{batchDetails._id}</p>
             </div>
             {project && (
-                 <div className="space-y-2 pt-4">
-                    <h3 className="text-lg font-semibold">Selected Project</h3>
-                    <div className="p-4 border rounded-lg bg-muted/50">
-                        <p className="font-bold text-primary">{project.title}</p>
-                        <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
-                    </div>
+              <div className="space-y-2 pt-4">
+                <h3 className="text-lg font-semibold">Selected Project</h3>
+                <div className="p-4 border rounded-lg bg-muted/50">
+                  <p className="font-bold text-primary">{project.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1">{project.description}</p>
                 </div>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -112,32 +112,32 @@ export default function BatchProfilePage() {
           </CardHeader>
           <CardContent>
             <Table>
-                <TableHeader>
-                    <TableRow>
-                        <TableHead>#</TableHead>
-                        <TableHead>Name with Initial</TableHead>
-                        <TableHead>Roll Number</TableHead>
-                        <TableHead>Department</TableHead>
-                        <TableHead>Section</TableHead>
-                        <TableHead>Year</TableHead>
-                        <TableHead>Email</TableHead>
-                        <TableHead>Phone</TableHead>
-                    </TableRow>
-                </TableHeader>
-                <TableBody>
-                    {batchDetails.students.map((student, index) => (
-                        <TableRow key={student.rollNumber}>
-                            <TableCell>{index + 1}</TableCell>
-                            <TableCell>{student.nameInitial}</TableCell>
-                            <TableCell>{student.rollNumber}</TableCell>
-                            <TableCell>{student.dept}</TableCell>
-                            <TableCell>{student.section}</TableCell>
-                            <TableCell>{student.year}</TableCell>
-                            <TableCell>{student.mailId}</TableCell>
-                            <TableCell>{student.phone}</TableCell>
-                        </TableRow>
-                    ))}
-                </TableBody>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>#</TableHead>
+                  <TableHead>Name with Initial</TableHead>
+                  <TableHead>Roll Number</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Section</TableHead>
+                  <TableHead>Year</TableHead>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Phone</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {batchDetails.students.map((student, index) => (
+                  <TableRow key={student.rollNumber}>
+                    <TableCell>{index + 1}</TableCell>
+                    <TableCell>{student.nameInitial}</TableCell>
+                    <TableCell>{student.rollNumber}</TableCell>
+                    <TableCell>{student.dept}</TableCell>
+                    <TableCell>{student.section}</TableCell>
+                    <TableCell>{student.year}</TableCell>
+                    <TableCell>{student.mailId}</TableCell>
+                    <TableCell>{student.phone}</TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
             </Table>
           </CardContent>
         </Card>

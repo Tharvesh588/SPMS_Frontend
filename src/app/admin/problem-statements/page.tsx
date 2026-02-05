@@ -5,9 +5,10 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, PlusCircle, Loader2, Upload } from 'lucide-react';
+import { LayoutDashboard, Users, BookCopy, FilePlus2, MoreHorizontal, PlusCircle, Loader2, Upload, Trash2 } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -69,6 +70,11 @@ export default function ManageProblemStatementsPage() {
   const [isBulkUploadOpen, setIsBulkUploadOpen] = useState(false);
   const [selectedStatement, setSelectedStatement] = useState<ProblemStatement | null>(null);
   const [departmentFilter, setDepartmentFilter] = useState<string>('all');
+
+  // Selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
   const { toast } = useToast();
 
   const fetchStatements = useCallback(async () => {
@@ -93,6 +99,53 @@ export default function ManageProblemStatementsPage() {
     fetchStatements();
   }, [fetchStatements]);
 
+  // Selection Logic
+  // Reset selection when data changes due to filter
+  useEffect(() => {
+    setSelectedIds(new Set());
+  }, [statements]);
+
+  const toggleSelection = (id: string) => {
+    const newSelected = new Set(selectedIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedIds(newSelected);
+  };
+
+  const toggleAllSelection = () => {
+    if (selectedIds.size === statements.length && statements.length > 0) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(statements.map(s => s._id)));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.size === 0) return;
+
+    if (!confirm(`Are you sure you want to delete ${selectedIds.size} statements? This action cannot be undone.`)) {
+      return;
+    }
+
+    setIsBulkDeleting(true);
+    try {
+      await Promise.all(Array.from(selectedIds).map(id => deleteProblemStatement(id)));
+
+      setStatements(current => current.filter(s => !selectedIds.has(s._id)));
+      setSelectedIds(new Set());
+      toast({ title: "Bulk Delete Successful", description: `Deleted ${selectedIds.size} statements.` });
+    } catch (error) {
+      console.error("Bulk delete failed", error);
+      toast({ variant: 'destructive', title: "Bulk Delete Failed", description: "Some deletions may have failed." });
+      fetchStatements(); // Sync state
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
   const handleStatementCreated = (newStatement: ProblemStatement) => {
     setStatements(current => [...current, newStatement]);
     setIsCreateFormOpen(false);
@@ -110,9 +163,14 @@ export default function ManageProblemStatementsPage() {
     try {
       await deleteProblemStatement(selectedStatement._id);
       setStatements(current => current.filter(s => s._id !== selectedStatement._id));
-      toast({ title: "Statement Deleted", description: `Statement "${selectedStatement.title}" has been deleted.`});
+      if (selectedIds.has(selectedStatement._id)) {
+        const newSelected = new Set(selectedIds);
+        newSelected.delete(selectedStatement._id);
+        setSelectedIds(newSelected);
+      }
+      toast({ title: "Statement Deleted", description: `Statement "${selectedStatement.title}" has been deleted.` });
     } catch (error) {
-       toast({
+      toast({
         variant: "destructive",
         title: "Failed to delete statement",
         description: (error as Error).message || "An unexpected error occurred.",
@@ -137,127 +195,155 @@ export default function ManageProblemStatementsPage() {
 
   return (
     <DashboardLayout userRole="Admin" sidebarContent={<AdminSidebar />}>
-      <div className="flex items-center">
-            <h1 className="text-lg font-semibold md:text-2xl">Problem Statements</h1>
-            <div className="ml-auto flex items-center gap-2">
-                 <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
-                    <DialogTrigger asChild>
-                        <Button variant="outline">
-                            <Upload className="mr-2 h-4 w-4" />
-                            Bulk Upload
-                        </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                        <DialogHeader>
-                            <DialogTitle>Bulk Upload Problem Statements</DialogTitle>
-                            <DialogDescription>
-                                Upload a CSV file. Required columns: title, description, gDriveLink, facultyEmail, department.
-                            </DialogDescription>
-                        </DialogHeader>
-                        <BulkUploadForm entity="problem-statements" onUploadComplete={handleUploadComplete} />
-                    </DialogContent>
-                </Dialog>
-                 <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
-                  <DialogTrigger asChild>
-                    <Button>
-                        <PlusCircle className="mr-2 h-4 w-4" />
-                        Add Statement
-                    </Button>
-                  </DialogTrigger>
-                  <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Add New Problem Statement</DialogTitle>
-                    </DialogHeader>
-                    <UploadProblemStatementForm onStatementCreated={handleStatementCreated} />
-                  </DialogContent>
-                </Dialog>
-            </div>
-      </div>
-        <Card>
-            <CardHeader>
-                <div className="flex justify-between items-center">
-                    <div>
-                        <CardTitle>All Problem Statements</CardTitle>
-                        <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
-                    </div>
-                     <div className="w-[200px]">
-                        <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
-                            <SelectTrigger>
-                                <SelectValue placeholder="Filter by department" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="all">All Departments</SelectItem>
-                                {departments.map(dept => (
-                                    <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex justify-center items-center h-64">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                  <span className="ml-4 text-muted-foreground">Loading statements...</span>
-                </div>
-              ): (
-                <Table>
-                    <TableHeader>
-                        <TableRow>
-                            <TableHead>Title</TableHead>
-                            <TableHead>Department</TableHead>
-                            <TableHead>Assigned Faculty</TableHead>
-                            <TableHead>Status</TableHead>
-                            <TableHead><span className="sr-only">Actions</span></TableHead>
-                        </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                        {statements.map(statement => (
-                            <TableRow key={statement._id}>
-                                <TableCell className="font-medium">{statement.title}</TableCell>
-                                <TableCell>{statement.department}</TableCell>
-                                <TableCell>{getFacultyName(statement.facultyId)}</TableCell>
-                                <TableCell>
-                                    <Badge variant={statement.isAssigned ? "secondary" : "default"}>
-                                        {statement.isAssigned ? 'Assigned' : 'Available'}
-                                    </Badge>
-                                </TableCell>
-                                <TableCell>
-                                     <DropdownMenu>
-                                        <DropdownMenuTrigger asChild>
-                                        <Button
-                                            aria-haspopup="true"
-                                            size="icon"
-                                            variant="ghost"
-                                        >
-                                            <MoreHorizontal className="h-4 w-4" />
-                                            <span className="sr-only">Toggle menu</span>
-                                        </Button>
-                                        </DropdownMenuTrigger>
-                                        <DropdownMenuContent align="end">
-                                        <DropdownMenuLabel>Actions</DropdownMenuLabel>
-                                        <DropdownMenuItem onSelect={() => toast({title: "Coming Soon", description: "Edit functionality will be added."})}>Edit</DropdownMenuItem>
-                                        <DropdownMenuItem onSelect={() => openDeleteDialog(statement)} className="text-destructive">Delete</DropdownMenuItem>
-                                        </DropdownMenuContent>
-                                    </DropdownMenu>
-                                </TableCell>
-                            </TableRow>
-                        ))}
-                    </TableBody>
-                </Table>
-              )}
-            </CardContent>
-        </Card>
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
+        <h1 className="text-lg font-semibold md:text-2xl">Problem Statements</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Bulk Delete Button */}
+          {selectedIds.size > 0 && (
+            <Button variant="destructive" size="sm" onClick={handleBulkDelete} disabled={isBulkDeleting}>
+              {isBulkDeleting ? <Loader2 className="mr-2 h-4 w-4 animate-spin" /> : <Trash2 className="mr-2 h-4 w-4" />}
+              Delete ({selectedIds.size})
+            </Button>
+          )}
 
-        <ConfirmDeleteDialog
-          open={isDeleteDialogOpen}
-          onOpenChange={setIsDeleteDialogOpen}
-          onConfirm={handleDeleteConfirm}
-          title="Are you sure you want to delete this statement?"
-          description="This action cannot be undone. This will permanently delete the problem statement."
-        />
+          <Dialog open={isBulkUploadOpen} onOpenChange={setIsBulkUploadOpen}>
+            <DialogTrigger asChild>
+              <Button variant="outline">
+                <Upload className="mr-2 h-4 w-4" />
+                Bulk Upload
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Bulk Upload Problem Statements</DialogTitle>
+                <DialogDescription>
+                  Upload a CSV file. Required columns: title, description, gDriveLink, facultyEmail, department.
+                </DialogDescription>
+              </DialogHeader>
+              <BulkUploadForm entity="problem-statements" onUploadComplete={handleUploadComplete} />
+            </DialogContent>
+          </Dialog>
+          <Dialog open={isCreateFormOpen} onOpenChange={setIsCreateFormOpen}>
+            <DialogTrigger asChild>
+              <Button>
+                <PlusCircle className="mr-2 h-4 w-4" />
+                Add Statement
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Add New Problem Statement</DialogTitle>
+              </DialogHeader>
+              <UploadProblemStatementForm onStatementCreated={handleStatementCreated} />
+            </DialogContent>
+          </Dialog>
+        </div>
+      </div>
+      <Card>
+        <CardHeader>
+          <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+            <div>
+              <CardTitle>All Problem Statements</CardTitle>
+              <CardDescription>View, edit, and manage all project problem statements.</CardDescription>
+            </div>
+            <div className="w-full md:w-[200px]">
+              <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by department" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Departments</SelectItem>
+                  {departments.map(dept => (
+                    <SelectItem key={dept.value} value={dept.value}>{dept.label}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <span className="ml-4 text-muted-foreground">Loading statements...</span>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead className="w-[50px]">
+                    <Checkbox
+                      checked={statements.length > 0 && selectedIds.size === statements.length}
+                      onCheckedChange={toggleAllSelection}
+                    />
+                  </TableHead>
+                  <TableHead>Title</TableHead>
+                  <TableHead>Department</TableHead>
+                  <TableHead>Assigned Faculty</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead><span className="sr-only">Actions</span></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {statements.length > 0 ? (
+                  statements.map(statement => (
+                    <TableRow key={statement._id}>
+                      <TableCell>
+                        <Checkbox
+                          checked={selectedIds.has(statement._id)}
+                          onCheckedChange={() => toggleSelection(statement._id)}
+                        />
+                      </TableCell>
+                      <TableCell className="font-medium">{statement.title}</TableCell>
+                      <TableCell>{statement.department}</TableCell>
+                      <TableCell>{getFacultyName(statement.facultyId)}</TableCell>
+                      <TableCell>
+                        <Badge variant={statement.isAssigned ? "secondary" : "default"}>
+                          {statement.isAssigned ? 'Assigned' : 'Available'}
+                        </Badge>
+                      </TableCell>
+                      <TableCell>
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              aria-haspopup="true"
+                              size="icon"
+                              variant="ghost"
+                            >
+                              <MoreHorizontal className="h-4 w-4" />
+                              <span className="sr-only">Toggle menu</span>
+                            </Button>
+                          </DropdownMenuTrigger>
+                          <DropdownMenuContent align="end">
+                            <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                            <DropdownMenuItem onSelect={() => toast({ title: "Coming Soon", description: "Edit functionality will be added." })}>Edit</DropdownMenuItem>
+                            <DropdownMenuItem onSelect={() => openDeleteDialog(statement)} className="text-destructive">Delete</DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
+                      </TableCell>
+                    </TableRow>
+                  ))) : (
+                  <TableRow>
+                    <TableCell colSpan={6} className="text-center py-8">
+                      No problem statements found.
+                    </TableCell>
+                  </TableRow>
+                )}
+              </TableBody>
+            </Table>
+          )}
+        </CardContent>
+      </Card>
+
+      <ConfirmDeleteDialog
+        open={isDeleteDialogOpen}
+        onOpenChange={setIsDeleteDialogOpen}
+        onConfirm={handleDeleteConfirm}
+        title="Are you sure you want to delete this statement?"
+        description="This action cannot be undone. This will permanently delete the problem statement."
+      />
 
     </DashboardLayout>
   );
 }
+

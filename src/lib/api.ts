@@ -2,11 +2,11 @@
 import { Faculty, Batch, ProblemStatement, Student } from "@/types";
 
 const API_BASE_URL = "https://egspgoi-spms.onrender.com/api/v1";
-// const API_BASE_URL = "http://localhost:5000/api/v1";
+// const API_BASE_URL = "https://egs.imtharvesh.me/api/v1";
 
 // Universal fetch helper
 async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     const headers: Record<string, string> = {
         'Content-Type': 'application/json',
         ...(options.headers as Record<string, string>),
@@ -45,7 +45,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
                 // Handle session termination (logged in on another device)
                 if (response.status === 401 && errorCode === 'SESSION_TERMINATED') {
                     if (typeof window !== 'undefined') {
-                        localStorage.clear();
+                        sessionStorage.clear();
                         alert('You have been logged in on another device. Please login again.');
                         window.location.href = '/';
                     }
@@ -55,7 +55,7 @@ async function fetcher<T>(url: string, options: RequestInit = {}): Promise<T> {
                 // Handle token expiration
                 if (response.status === 401 && errorCode === 'TOKEN_EXPIRED') {
                     if (typeof window !== 'undefined') {
-                        localStorage.clear();
+                        sessionStorage.clear();
                         alert('Your session has expired. Please login again.');
                         window.location.href = '/';
                     }
@@ -143,10 +143,10 @@ export async function login(credentials: LoginCredentials, role: string): Promis
 
         // Success - store token and user data
         if (data.token && typeof window !== 'undefined') {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userId', data.user.id);
-            localStorage.setItem('userRole', data.user.role);
-            if (data.user.name) localStorage.setItem('userName', data.user.name);
+            sessionStorage.setItem('token', data.token);
+            sessionStorage.setItem('userId', data.user.id);
+            sessionStorage.setItem('userRole', data.user.role);
+            if (data.user.name) sessionStorage.setItem('userName', data.user.name);
         }
 
         return {
@@ -189,10 +189,10 @@ export async function forceLogin(credentials: LoginCredentials, role: string): P
 
         // Success - store token and user data
         if (data.token && typeof window !== 'undefined') {
-            localStorage.setItem('token', data.token);
-            localStorage.setItem('userId', data.user.id);
-            localStorage.setItem('userRole', data.user.role);
-            if (data.user.name) localStorage.setItem('userName', data.user.name);
+            sessionStorage.setItem('token', data.token);
+            sessionStorage.setItem('userId', data.user.id);
+            sessionStorage.setItem('userRole', data.user.role);
+            if (data.user.name) sessionStorage.setItem('userName', data.user.name);
         }
 
         return {
@@ -211,12 +211,12 @@ export async function forceLogin(credentials: LoginCredentials, role: string): P
 
 export async function logout(): Promise<{ success: boolean, message: string }> {
     try {
-        const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+        const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
 
         if (!token) {
             // No token, just clear storage
             if (typeof window !== 'undefined') {
-                localStorage.clear();
+                sessionStorage.clear();
             }
             return { success: true, message: 'Logged out (no active session)' };
         }
@@ -231,7 +231,7 @@ export async function logout(): Promise<{ success: boolean, message: string }> {
 
         // Clear local storage regardless of response
         if (typeof window !== 'undefined') {
-            localStorage.clear();
+            sessionStorage.clear();
         }
 
         const data = await response.json();
@@ -243,7 +243,7 @@ export async function logout(): Promise<{ success: boolean, message: string }> {
     } catch (error) {
         // Even if API call fails, clear local storage
         if (typeof window !== 'undefined') {
-            localStorage.clear();
+            sessionStorage.clear();
         }
         return {
             success: true,
@@ -252,6 +252,22 @@ export async function logout(): Promise<{ success: boolean, message: string }> {
     }
 }
 
+// Settings
+export type SystemSettings = {
+    key: string;
+    psSelectionEnabled: boolean;
+};
+
+export async function getSystemSettings(): Promise<{ success: boolean, settings: SystemSettings }> {
+    return fetcher('/admin/settings');
+}
+
+export async function updateSystemSettings(psSelectionEnabled: boolean): Promise<{ success: boolean, settings: SystemSettings }> {
+    return fetcher('/admin/settings', {
+        method: 'PUT',
+        body: JSON.stringify({ psSelectionEnabled })
+    });
+}
 // Admin - Faculty
 export async function getFaculties(): Promise<Faculty[]> {
     const response = await fetcher<{
@@ -479,7 +495,7 @@ export async function bulkUpload(
     entity: 'faculty' | 'batch' | 'problem-statements',
     file: File
 ): Promise<any> {
-    const token = typeof window !== 'undefined' ? localStorage.getItem('token') : null;
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
     if (!token) {
         throw new Error("Not authorized for this role.");
     }
@@ -603,4 +619,94 @@ export async function downloadProjectAssignmentsCSV(): Promise<void> {
         console.error('Error downloading CSV:', error);
         throw new Error('Failed to download CSV file');
     }
+}
+
+// -----------------------
+// File Management
+// -----------------------
+
+export type FileRecord = {
+    fileId: string;
+    name: string;
+    url: string;
+    uploadedAt: string;
+    mimeType: string;
+};
+
+export async function uploadBatchFile(batchId: string, file: File): Promise<{ success: boolean, file: FileRecord, message: string }> {
+    const token = typeof window !== 'undefined' ? sessionStorage.getItem('token') : null;
+    if (!token) throw new Error("Not authorized");
+
+    const formData = new FormData();
+    formData.append('file', file);
+
+    const response = await fetch(`${API_BASE_URL}/batch/${batchId}/files`, {
+        method: 'POST',
+        headers: {
+            'Authorization': `Bearer ${token}`
+        },
+        body: formData
+    });
+
+    if (!response.ok) {
+        let message = 'Upload failed';
+        try {
+            const data = await response.json();
+            message = data.message || message;
+        } catch (e) { }
+        throw new Error(message);
+    }
+
+    return response.json();
+}
+
+export async function getBatchFiles(batchId: string): Promise<{ success: boolean, files: FileRecord[] }> {
+    const response = await fetcher<{ success: boolean, files: FileRecord[] }>(`/batch/${batchId}/files`);
+    return response;
+}
+
+export async function generateFileToken(fileId: string): Promise<{ success: boolean, token: string }> {
+    return fetcher('/files/token', {
+        method: 'POST',
+        body: JSON.stringify({ fileId })
+    });
+}
+
+
+export async function invalidateFileToken(token: string): Promise<{ success: boolean }> {
+    return fetcher(`/files/token/${token}`, {
+        method: 'DELETE'
+    });
+}
+
+// -----------------------
+// Advanced Batch Management (Admin & Faculty)
+// -----------------------
+
+// Admin
+export async function updateBatchStudentsAsAdmin(batchId: string, students: Student[]): Promise<{ success: boolean, batch: Batch, message: string }> {
+    return fetcher(`/admin/batches/${batchId}/students`, {
+        method: 'PUT',
+        body: JSON.stringify({ students })
+    });
+}
+
+export async function resetBatchProjectAsAdmin(batchId: string): Promise<{ success: boolean, message: string }> {
+    return fetcher(`/admin/batches/${batchId}/reset`, {
+        method: 'POST'
+    });
+}
+
+// Faculty
+export async function updateBatchStudentsAsFaculty(batchId: string, students: Student[]): Promise<{ success: boolean, batch: Batch, message: string }> {
+    return fetcher(`/faculty/batches/${batchId}/students`, {
+        method: 'PUT',
+        body: JSON.stringify({ students })
+    });
+}
+
+export async function resetBatchProjectAsFaculty(batchId: string): Promise<{ success: boolean, message: string }> {
+    return fetcher(`/faculty/batches/${batchId}/reset`, {
+        method: 'POST'
+    });
 }

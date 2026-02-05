@@ -10,7 +10,9 @@ import { CreateFacultyForm } from '@/components/admin/create-faculty-form';
 import { CreateBatchForm } from '@/components/admin/create-batch-form';
 import { UploadProblemStatementForm } from '@/components/admin/upload-ps-form';
 import React, { useEffect, useState, useCallback } from 'react';
-import { getFaculties, getBatches, getProblemStatementsForAdmin, downloadProjectAssignmentsCSV } from '@/lib/api';
+import { getFaculties, getBatches, getProblemStatementsForAdmin, downloadProjectAssignmentsCSV, getSystemSettings, updateSystemSettings } from '@/lib/api';
+import { Switch } from "@/components/ui/switch";
+import { Label } from "@/components/ui/label";
 
 const AdminSidebar = () => (
   <SidebarMenu>
@@ -51,13 +53,16 @@ export default function AdminDashboard() {
   });
   const [isLoading, setIsLoading] = useState(true);
 
+  const [psSelectionEnabled, setPsSelectionEnabled] = useState(true);
+
   const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
-      const [faculties, batches, problemStatements] = await Promise.all([
+      const [faculties, batches, problemStatements, settingsRes] = await Promise.all([
         getFaculties(),
         getBatches(),
         getProblemStatementsForAdmin(),
+        getSystemSettings(),
       ]);
 
       const projectsSelected = batches.filter(batch => batch.projectId).length;
@@ -70,6 +75,11 @@ export default function AdminDashboard() {
         totalProblemStatements: problemStatements.length,
         assignedProblemStatements: assignedProblemStatements,
       });
+
+      if (settingsRes.success && settingsRes.settings) {
+        setPsSelectionEnabled(settingsRes.settings.psSelectionEnabled);
+      }
+
     } catch (error) {
       console.error("Failed to fetch dashboard stats:", error);
     } finally {
@@ -80,6 +90,19 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  const handleToggleSettings = async (checked: boolean) => {
+    // Optimistic update
+    setPsSelectionEnabled(checked);
+    try {
+      await updateSystemSettings(checked);
+    } catch (error) {
+      console.error("Failed to update settings:", error);
+      setPsSelectionEnabled(!checked); // Revert
+      alert("Failed to update settings.");
+    }
+  }
+
 
   const handleCreation = () => {
     // We wrap this in a timeout to allow the backend to process the change
@@ -113,6 +136,31 @@ export default function AdminDashboard() {
           <StatCard title="Total PS" value={stats.totalProblemStatements} icon={<FileText className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
           <StatCard title="PS Assigned" value={stats.assignedProblemStatements} icon={<CheckSquare className="h-4 w-4 text-muted-foreground" />} isLoading={isLoading} />
         </div>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>System Controls</CardTitle>
+            <CardDescription>Global settings for the application.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center space-x-4 p-4 border rounded-lg bg-secondary/50">
+              <Switch
+                id="ps-selection-mode"
+                checked={psSelectionEnabled}
+                onCheckedChange={handleToggleSettings}
+              />
+              <div className="flex-1">
+                <Label htmlFor="ps-selection-mode" className="text-base font-medium">
+                  Problem Statement Selection Open
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  When ON: All batches can login and select projects.<br />
+                  When OFF: Only batches with assigned projects can login. Others are blocked.
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
 
         <Card>
           <CardHeader>

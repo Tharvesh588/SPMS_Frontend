@@ -3,12 +3,15 @@ import { DashboardLayout } from '@/components/dashboard-layout';
 import { SidebarMenu, SidebarMenuItem, SidebarMenuButton } from '@/components/ui/sidebar';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileText, LayoutDashboard, Loader2, Users, ArrowLeft, ExternalLink, Lock, Unlock } from 'lucide-react';
+import { FileText, LayoutDashboard, Loader2, Users, ArrowLeft, ExternalLink, Lock, Unlock, FileCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
-import { getBatchDetailsAsFaculty, type Batch } from '@/lib/api';
+import { getBatchDetailsAsFaculty, getBatchFiles, generateFileToken, resetBatchProjectAsFaculty, type Batch } from '@/lib/api';
 import { useToast } from '@/hooks/use-toast';
 import { useParams, useRouter } from 'next/navigation';
+import { Badge } from '@/components/ui/badge';
+import { ManageStudentsDialog } from '@/components/manage-students-dialog';
+import { Users as UsersIcon, RefreshCw, Settings } from 'lucide-react';
 
 const FacultySidebar = () => (
     <SidebarMenu>
@@ -21,11 +24,67 @@ const FacultySidebar = () => (
         <SidebarMenuItem>
             <SidebarMenuButton href="/u/portal/faculty?page=problem-statements">
                 <FileText className="h-4 w-4" />
+                <FileCheck className="h-4 w-4" />
                 My Statements
             </SidebarMenuButton>
         </SidebarMenuItem>
     </SidebarMenu>
 );
+
+
+function DocumentsList({ batchId }: { batchId: string }) {
+    const [files, setFiles] = useState<{ fileId: string; name: string; url: string; uploadedAt: string }[]>([]);
+    const { toast } = useToast();
+
+    useEffect(() => {
+        async function fetchFiles() {
+            try {
+                const { files } = await getBatchFiles(batchId);
+                setFiles(files || []);
+            } catch (error) {
+                console.error("Failed to fetch files:", error);
+            }
+        }
+        fetchFiles();
+    }, [batchId]);
+
+    const handleView = async (fileId: string) => {
+        try {
+            const { token } = await generateFileToken(fileId);
+            window.open(`/view-doc/${token}`, '_blank');
+        } catch (error) {
+            toast({ variant: 'destructive', title: "View Failed", description: "Could not generate access token." });
+        }
+    };
+
+    if (files.length === 0) return null;
+
+    return (
+        <Card className="mt-6">
+            <CardHeader>
+                <CardTitle>Batch Documents</CardTitle>
+            </CardHeader>
+            <CardContent>
+                <div className="grid gap-2">
+                    {files.map(file => (
+                        <div key={file.fileId} className="flex items-center justify-between p-3 border rounded bg-slate-50 dark:bg-slate-800">
+                            <div className="flex items-center gap-2">
+                                <FileCheck className="h-4 w-4 text-primary" />
+                                <span>{file.name}</span>
+                                <span className="text-xs text-muted-foreground ml-2">
+                                    {new Date(file.uploadedAt).toLocaleDateString()}
+                                </span>
+                            </div>
+                            <Button variant="outline" size="sm" onClick={() => handleView(file.fileId)}>
+                                View
+                            </Button>
+                        </div>
+                    ))}
+                </div>
+            </CardContent>
+        </Card>
+    );
+}
 
 export default function BatchDetailsPage() {
     const params = useParams();
@@ -56,7 +115,33 @@ export default function BatchDetailsPage() {
         };
 
         fetchBatchDetails();
+        fetchBatchDetails();
     }, [batchId, toast]);
+
+    const [isManageStudentsOpen, setIsManageStudentsOpen] = useState(false);
+
+    const handleBatchUpdated = (updatedBatch: Batch) => {
+        setBatch(updatedBatch);
+    };
+
+    const handleResetProject = async () => {
+        if (!confirm("Are you sure you want to reset the project selection for this batch? This action cannot be undone.")) return;
+
+        try {
+            const result = await resetBatchProjectAsFaculty(batchId);
+            toast({ title: "Project Reset", description: result.message });
+            // Refresh batch details
+            const { batch: newBatch } = await getBatchDetailsAsFaculty(batchId);
+            setBatch(newBatch);
+        } catch (error) {
+            toast({
+                variant: 'destructive',
+                title: "Reset Failed",
+                description: (error as Error).message
+            });
+        }
+    };
+
 
     const coordinator = batch?.coordinatorId && typeof batch.coordinatorId !== 'string'
         ? batch.coordinatorId
@@ -117,7 +202,20 @@ export default function BatchDetailsPage() {
                         {/* Project Information */}
                         <Card>
                             <CardHeader>
-                                <CardTitle>Project Information</CardTitle>
+                                <div className="flex items-center justify-between">
+                                    <CardTitle>Project Information</CardTitle>
+                                    {project && (
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            onClick={handleResetProject}
+                                            className="text-destructive hover:text-destructive"
+                                        >
+                                            <RefreshCw className="mr-2 h-4 w-4" />
+                                            Reset Project
+                                        </Button>
+                                    )}
+                                </div>
                             </CardHeader>
                             <CardContent>
                                 {project ? (
@@ -163,6 +261,9 @@ export default function BatchDetailsPage() {
                             </CardContent>
                         </Card>
 
+                        {/* Batch Documents */}
+                        <DocumentsList batchId={batchId} />
+
                         {/* Coordinator Information */}
                         {coordinator && (
                             <Card>
@@ -191,9 +292,15 @@ export default function BatchDetailsPage() {
                         {/* Students List */}
                         <Card>
                             <CardHeader>
-                                <CardTitle className="flex items-center gap-2">
-                                    <Users className="h-5 w-5" />
-                                    Students ({batch.students?.length || 0})
+                                <CardTitle className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Users className="h-5 w-5" />
+                                        Students ({batch.students?.length || 0})
+                                    </div>
+                                    <Button size="sm" variant="outline" onClick={() => setIsManageStudentsOpen(true)}>
+                                        <Settings className="mr-2 h-4 w-4" />
+                                        Manage Students
+                                    </Button>
                                 </CardTitle>
                             </CardHeader>
                             <CardContent>
@@ -238,6 +345,15 @@ export default function BatchDetailsPage() {
                                 )}
                             </CardContent>
                         </Card>
+
+                        <ManageStudentsDialog
+                            batch={batch}
+                            open={isManageStudentsOpen}
+                            onOpenChange={setIsManageStudentsOpen}
+                            userRole="Faculty"
+                            onBatchUpdated={handleBatchUpdated}
+                        />
+
                     </>
                 ) : (
                     <Card>

@@ -49,7 +49,7 @@ export function DashboardLayout({ children, sidebarContent, userRole }: Dashboar
       console.error('Logout error:', error);
       // Even if API fails, still clear local storage
       if (typeof window !== 'undefined') {
-        localStorage.clear();
+        sessionStorage.clear();
       }
     } finally {
       router.push('/');

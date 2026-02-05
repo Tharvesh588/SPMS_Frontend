@@ -49,7 +49,7 @@ export function SaveStudentsForm({ onStudentsSaved }: SaveStudentsFormProps) {
   });
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    const batchId = localStorage.getItem('userId');
+    const batchId = sessionStorage.getItem('userId');
     if (!batchId) {
       toast({ variant: 'destructive', title: 'Error', description: 'Batch ID not found.' });
       return;

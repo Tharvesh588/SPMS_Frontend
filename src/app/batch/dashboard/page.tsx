@@ -6,7 +6,8 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileCheck, Files, LayoutDashboard, CheckCircle, Loader2, ArrowRight, Link as LinkIcon, Download, User } from 'lucide-react';
-import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport, getDomainsByDepartment, getProblemStatementsByDomain } from '@/lib/api';
+import { getBatchDetails, getAvailableProblemStatementsForBatch, chooseProblemStatement, generateBatchReport, getDomainsByDepartment, getProblemStatementsByDomain, uploadBatchFile, getBatchFiles, generateFileToken } from '@/lib/api';
+import { Input } from '@/components/ui/input';
 import type { ProblemStatement, Batch, Faculty } from '@/types';
 import { useEffect, useState, useCallback } from 'react';
 import { useToast } from '@/hooks/use-toast';
@@ -38,7 +39,7 @@ export default function BatchDashboard() {
 
   const fetchDetails = useCallback(async () => {
     setIsLoading(true);
-    const batchId = typeof window !== 'undefined' ? localStorage.getItem('userId') : null;
+    const batchId = typeof window !== 'undefined' ? sessionStorage.getItem('userId') : null;
     if (!batchId) {
       toast({ variant: 'destructive', title: 'Authentication Error', description: 'Could not find batch ID.' });
       setIsLoading(false);
@@ -169,7 +170,7 @@ function AvailableProjectsView({ onProjectSelected, batchDetails }: { onProjectS
   }
 
   const handleConfirmSelection = async () => {
-    const batchId = localStorage.getItem('userId');
+    const batchId = sessionStorage.getItem('userId');
     if (!selectedStatement || !batchId) {
       toast({ variant: 'destructive', title: 'Error', description: 'No statement or batch ID found.' });
       return;
@@ -315,14 +316,104 @@ function AvailableProjectsView({ onProjectSelected, batchDetails }: { onProjectS
   )
 }
 
+
+function DocumentsSection({ batchId }: { batchId: string }) {
+  const [files, setFiles] = useState<{ fileId: string; name: string; url: string; uploadedAt: string }[]>([]);
+  const [uploading, setUploading] = useState(false);
+  const { toast } = useToast();
+
+  const fetchFiles = useCallback(async () => {
+    try {
+      const { files } = await getBatchFiles(batchId);
+      setFiles(files || []);
+    } catch (error) {
+      console.error("Failed to fetch files:", error);
+    }
+  }, [batchId]);
+
+  useEffect(() => {
+    fetchFiles();
+  }, [fetchFiles]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files?.length) return;
+    const file = e.target.files[0];
+    setUploading(true);
+    try {
+      await uploadBatchFile(batchId, file);
+      toast({ title: "Upload Success", description: "File uploaded successfully." });
+      fetchFiles();
+    } catch (error) {
+      console.error("Upload error:", error);
+      toast({ variant: 'destructive', title: "Upload Failed", description: (error as Error).message });
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleView = async (fileId: string) => {
+    try {
+      const { token } = await generateFileToken(fileId);
+      // Open in new tab
+      window.open(`/view-doc/${token}`, '_blank');
+    } catch (error) {
+      toast({ variant: 'destructive', title: "View Failed", description: "Could not generate access token." });
+    }
+  };
+
+  return (
+    <div className="mt-8">
+      <Card>
+        <CardHeader>
+          <CardTitle>Project Documents</CardTitle>
+          <CardDescription>Manage your project-related documents here.</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <Input type="file" onChange={handleUpload} disabled={uploading} className="max-w-xs" />
+              {uploading && <Loader2 className="animate-spin h-4 w-4" />}
+            </div>
+
+            <div className="grid gap-2">
+              {files.map(file => (
+                <div key={file.fileId} className="flex items-center justify-between p-3 border rounded bg-gray-50 dark:bg-gray-800">
+                  <div className="flex items-center gap-2">
+                    <FileCheck className="h-4 w-4 text-primary" />
+                    <span>{file.name}</span>
+                    <span className="text-xs text-muted-foreground ml-2">
+                      {new Date(file.uploadedAt).toLocaleDateString()}
+                    </span>
+                  </div>
+                  <Button variant="outline" size="sm" onClick={() => handleView(file.fileId)}>
+                    View
+                  </Button>
+                </div>
+              ))}
+              {files.length === 0 && <p className="text-sm text-muted-foreground">No documents uploaded yet.</p>}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
+
 function SelectedProjectView({ batch }: { batch: Batch }) {
   const project = batch.projectId as ProblemStatement;
   const coordinator = batch.coordinatorId as Faculty;
   const { toast } = useToast();
   const [isDownloading, setIsDownloading] = useState(false);
 
+  // ... (existing code for download report) ...
+  // Wait, I need to include the existing handleDownloadReport logic?
+  // I am replacing the WHOLE SelectedProjectFunction? No, just appending DocumentsSection.
+  // Actually, I can replace the logic inside the return statement or add the component.
+  // To be safe, I will re-implement SelectedProjectView with the addition, 
+  // copying the logic from the view_file output but adding DocumentsSection usage.
+
   const handleDownloadReport = async () => {
-    const batchId = localStorage.getItem('userId');
+    const batchId = sessionStorage.getItem('userId');
     if (!batchId) return;
 
     setIsDownloading(true);
@@ -385,7 +476,7 @@ ${report.students.map((s: any, i: number) => `  ${i + 1}. ${s.nameInitial} (${s.
         </Button> */}
       </div>
       <div className="grid md:grid-cols-3 gap-8">
-        <div className="md:col-span-2">
+        <div className="md:col-span-2 space-y-8">
           <Card>
             <CardHeader>
               <CardTitle className="text-2xl">{project.title}</CardTitle>
@@ -399,6 +490,9 @@ ${report.students.map((s: any, i: number) => `  ${i + 1}. ${s.nameInitial} (${s.
               </Button>
             </CardFooter>
           </Card>
+
+          <DocumentsSection batchId={batch._id} />
+
         </div>
         <div>
           <Card>
@@ -443,3 +537,4 @@ function ProblemStatementCard({ ps, onSelect }: { ps: ProblemStatement, onSelect
     </Card>
   );
 }
+

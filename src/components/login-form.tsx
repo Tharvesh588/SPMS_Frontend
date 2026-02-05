@@ -69,8 +69,8 @@ export default function LoginForm() {
 
   async function handleLoginSuccess(role: string, userId: string) {
     if (typeof window !== 'undefined') {
-      localStorage.setItem('userId', userId);
-      localStorage.setItem('userRole', role);
+      sessionStorage.setItem('userId', userId);
+      sessionStorage.setItem('userRole', role);
     }
     router.push(`/u/portal/${role}?page=dashboard`);
   }
@@ -98,6 +98,15 @@ export default function LoginForm() {
         setIsLoading(false);
         return;
       }
+
+      // Check for PS Selection Closed
+      if (!response.success && response.code === 'PS_SELECTION_CLOSED') {
+        // You might want a specific modal for this too, or just a clear alert
+        alert(response.message); // Simple alert as requested: "Open a Pop Message"
+        setIsLoading(false);
+        return;
+      }
+
 
       // Success
       if (response.success && response.user) {
